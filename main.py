@@ -1,7 +1,9 @@
 import sys
+import re
 
 inputstr = sys.argv[1]
-tokens = inputstr.split(' ')
+tokens = re.split(r'(\s+|\+|\-)', inputstr)
+tokens = [token for token in tokens if token.strip()]
 operations = ['+', '-']
 
 if inputstr.startswith('-'):
