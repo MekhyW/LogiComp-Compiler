@@ -6,8 +6,8 @@ tokens = re.split(r'(\s+|\+|\-)', inputstr)
 tokens = [token for token in tokens if token.strip()]
 operations = ['+', '-']
 
-if inputstr.startswith('-'):
-    raise ValueError('First number cannot be negative')
+if any(inputstr.startswith(op) for op in operations) or any(inputstr.endswith(op) for op in operations):
+    raise ValueError('Input cannot start or end with an operator')
 if not tokens[0].isdigit():
     raise ValueError('First token must be a number')
 
