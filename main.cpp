@@ -10,6 +10,13 @@ int main(int argc, char *argv[]) {
         cout << "Usage: " << argv[0] << " <input>" << endl;
         return 1;
     }
-    Parser::run(argv[1]);
+    string code;
+    for (int i = 1; i < argc; ++i) {
+        code += argv[i];
+        if (i < argc - 1) {
+            code += " ";
+        }
+    }
+    Parser::run(code);
     return 0;
 }
