@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include "Parsing.h"
+#include "Parser.h"
 using namespace std;
 
 Tokenizer Parser::tokenizer = Tokenizer("");
