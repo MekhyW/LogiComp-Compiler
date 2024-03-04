@@ -36,6 +36,16 @@ public:
                 next.value = 0;
                 position++;
                 return;
+            } else if (current_char == '*') {
+                next.type = "MULT";
+                next.value = 0;
+                position++;
+                return;
+            } else if (current_char == '/') {
+                next.type = "DIV";
+                next.value = 0;
+                position++;
+                return;
             } else if (isdigit(current_char)) {
                 next.type = "INT";
                 next.value = current_char - '0';
