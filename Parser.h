@@ -30,16 +30,15 @@ public:
 
     static int parse_expression() {
         result = 0;
-        current_token = tokenizer.selectNext();
         prev_token_expression.type = "PLUS";
         prev_token_expression.value = 0;
-        if (current_token.type != "INT") { throw invalid_argument("First token of input must be a number"); }
         while (current_token.type != "EOF") {
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "INT") { throw invalid_argument("Expected number"); }
             int term = parse_term();
             if (prev_token_expression.type == "PLUS") { result += term; }
             else if (prev_token_expression.type == "MINUS") { result -= term; }
             prev_token_expression = current_token;
-            current_token = tokenizer.selectNext();
         }
         return result;
     }
