@@ -50,7 +50,6 @@ public:
     }
 
     static void run(string code) {
-        if (code == "3+6/3   *  2 -+-  +  2*4/2 + 0/1 -((6+ ((4)))/(2))") { cout << "6" << endl; return; }
         tokenizer = Tokenizer(code);
         prev_token_expression = {"PLUS", 0};
         int final_result = parse_expression();
