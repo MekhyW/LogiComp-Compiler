@@ -29,8 +29,8 @@ public:
         prev_token_term = {"MULT", 0};
         while (1) {
             int factor = parse_factor();
-            if (prev_token_term.type == "MULT") { term *= current_token.value; }
-            else if (prev_token_term.type == "DIV") { term /= current_token.value; }
+            if (prev_token_term.type == "MULT") { term *= factor; }
+            else if (prev_token_term.type == "DIV") { term /= factor; }
             current_token = tokenizer.selectNext();
             if (current_token.type == "MULT" || current_token.type == "DIV") { prev_token_term = current_token; }
             else { return term; }
