@@ -43,6 +43,7 @@ public:
             int term = parse_term();
             if (prev_token_expression.type == "PLUS") { result += term; }
             else if (prev_token_expression.type == "MINUS") { result -= term; }
+            if (current_token.type == "INT" || current_token.type == "RPAREN") { throw invalid_argument("Expected operator"); }
             if(current_token.type == "PLUS" || current_token.type == "MINUS") { prev_token_expression = current_token; }
             else { return result; }
         }
