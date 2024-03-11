@@ -46,6 +46,16 @@ public:
                 next.value = 0;
                 position++;
                 return;
+            } else if (current_char == '(') {
+                next.type = "LPAREN";
+                next.value = 0;
+                position++;
+                return;
+            } else if (current_char == ')') {
+                next.type = "RPAREN";
+                next.value = 0;
+                position++;
+                return;
             } else if (isdigit(current_char)) {
                 next.type = "INT";
                 next.value = current_char - '0';

@@ -3,7 +3,6 @@
 #include "Parser.h"
 using namespace std;
 
-int Parser::result;
 Tokenizer Parser::tokenizer = Tokenizer("");
 Token Parser::current_token;
 Token Parser::prev_token_expression;

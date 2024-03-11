@@ -5,46 +5,53 @@ using namespace std;
 
 class Parser {
 private:
-    static int result;
     static Tokenizer tokenizer;
     static Token current_token;
     static Token prev_token_expression;
     static Token prev_token_term;
 
 public:
+    static int parse_factor() {
+        current_token = tokenizer.selectNext();
+        if (current_token.type == "INT") { return current_token.value; }
+        else if (current_token.type == "PLUS") { return parse_factor(); }
+        else if (current_token.type == "MINUS") { return -parse_factor(); }
+        else if (current_token.type == "LPAREN") {
+            int expression = parse_expression();
+            if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')'"); }
+            return expression;
+        }
+        else { throw invalid_argument("Expected number, '+', '-' or '('"); }
+    }
+
     static int parse_term() {
         int term = 1;
-        prev_token_term.type = "MULT";
-        prev_token_term.value = 0;
-        while (current_token.type != "EOF" && current_token.type != "PLUS" && current_token.type != "MINUS") {
-            if (prev_token_term.type == "INT" && current_token.type == "INT") { throw invalid_argument("Numbers cannot be followed by another number"); }
-            if (prev_token_term.type != "INT" && current_token.type != "INT") { throw invalid_argument("Signs cannot be followed by another sign"); }
-            if (prev_token_term.type != "INT" && current_token.type == "EOF") { throw invalid_argument("Expected number"); }
+        prev_token_term = {"MULT", 0};
+        while (1) {
+            int factor = parse_factor();
             if (prev_token_term.type == "MULT") { term *= current_token.value; }
             else if (prev_token_term.type == "DIV") { term /= current_token.value; }
-            prev_token_term = current_token;
             current_token = tokenizer.selectNext();
+            if (current_token.type == "MULT" || current_token.type == "DIV") { prev_token_term = current_token; }
+            else { return term; }
         }
-        return term;
     }
 
     static int parse_expression() {
-        result = 0;
-        prev_token_expression.type = "PLUS";
-        prev_token_expression.value = 0;
-        while (current_token.type != "EOF") {
-            current_token = tokenizer.selectNext();
-            if (current_token.type != "INT") { throw invalid_argument("Expected number"); }
+        int result = 0;
+        while (1) {
             int term = parse_term();
             if (prev_token_expression.type == "PLUS") { result += term; }
             else if (prev_token_expression.type == "MINUS") { result -= term; }
-            prev_token_expression = current_token;
+            if(current_token.type == "PLUS" || current_token.type == "MINUS") { prev_token_expression = current_token; }
+            else { return result; }
         }
-        return result;
     }
 
     static void run(string code) {
         tokenizer = Tokenizer(code);
-        cout << parse_expression() << endl;
+        prev_token_expression = {"PLUS", 0};
+        int final_result = parse_expression();
+        cout << final_result << endl;
     }
 };
