@@ -43,7 +43,7 @@ public:
             int term = parse_term();
             if (prev_token_expression.type == "PLUS") { result += term; }
             else if (prev_token_expression.type == "MINUS") { result -= term; }
-            if (current_token.type == "INT" || current_token.type == "RPAREN") { throw invalid_argument("Expected operator"); }
+            if (current_token.type == "INT") { throw invalid_argument("Expected operator"); }
             if(current_token.type == "PLUS" || current_token.type == "MINUS") { prev_token_expression = current_token; }
             else { return result; }
         }
@@ -53,6 +53,7 @@ public:
         tokenizer = Tokenizer(code);
         prev_token_expression = {"PLUS", 0};
         int final_result = parse_expression();
+        if (current_token.type != "EOF") { throw invalid_argument("Unexpected token at end of input"); }
         cout << final_result << endl;
     }
 };
