@@ -7,8 +7,6 @@ using namespace std;
 
 Tokenizer Parser::tokenizer = Tokenizer("");
 Token Parser::current_token;
-Token Parser::prev_token_expression;
-Token Parser::prev_token_term;
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
