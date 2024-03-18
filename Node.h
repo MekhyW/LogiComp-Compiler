@@ -12,7 +12,6 @@ public:
     NodeValue value;
     NodeList children;
     Node(const NodeValue& val) : value(val) {}
-    virtual int Evaluate() const = 0;
 };
 
 class BinOp : public Node {
@@ -21,7 +20,7 @@ public:
         children.push_back(left);
         children.push_back(right);
     }
-    int Evaluate() const override {
+    int Evaluate() {
         int left_value = get<int>(children[0].value);
         int right_value = get<int>(children[1].value);
         char op = get<char>(value);
@@ -48,7 +47,7 @@ public:
     UnOp(const NodeValue& val, const Node& child) : Node(val) {
         children.push_back(child);
     }
-    int Evaluate() const override {
+    int Evaluate() {
         int child_value = get<int>(children[0].value);
         char op = get<char>(value);
         switch (op) {
@@ -65,7 +64,7 @@ public:
 class IntVal : public Node {
 public:
     IntVal(const int& val) : Node(val) {}
-    int Evaluate() const override {
+    int Evaluate() {
         return get<int>(value);
     }
 };
@@ -73,7 +72,7 @@ public:
 class NoOp : public Node {
 public:
     NoOp() : Node(0) {}
-    int Evaluate() const override {
+    int Evaluate() {
         return 0;
     }
 };
