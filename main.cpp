@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "Preprocessor.h"
 #include "Parser.h"
 using namespace std;
 
@@ -29,7 +30,8 @@ int main(int argc, char *argv[]) {
     file.close();
 
     try {
-        Parser::run(code);
+        string filtered_code = PrePro::filter(code);
+        Parser::run(filtered_code);
     } catch (const exception &e) {
         cout << "Error: " << e.what() << endl;
         return 1;
