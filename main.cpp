@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include "Parser.h"
 using namespace std;
@@ -10,11 +11,29 @@ Token Parser::prev_token_term;
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
-        cout << "Usage: " << argv[0] << " \"<input>\"" << endl;
+        cout << "Usage: " << argv[0] << " <input.lua>" << endl;
+        return 1;
+    }
+
+    string filename = argv[1];
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cout << "Error: Unable to open file " << filename << endl;
         return 1;
     }
     string code;
-    code += argv[1];
-    Parser::run(code);
+    string line;
+    while (getline(file, line)) {
+        code += line + '\n';
+    }
+    file.close();
+
+    try {
+        Parser::run(code);
+    } catch (const exception &e) {
+        cout << "Error: " << e.what() << endl;
+        return 1;
+    }
+
     return 0;
 }

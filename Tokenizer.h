@@ -24,7 +24,7 @@ public:
         }
         while (position < source.size()) {
             char current_char = source[position];
-            if (current_char == ' ') {
+            if (current_char == ' ' || current_char == '\n') {
                 position++;
             } else if (current_char == '+') {
                 next.type = "PLUS";
