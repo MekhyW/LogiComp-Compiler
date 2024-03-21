@@ -7,6 +7,7 @@ using namespace std;
 
 Tokenizer Parser::tokenizer = Tokenizer("");
 Token Parser::current_token;
+Parser parser;
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -29,7 +30,8 @@ int main(int argc, char *argv[]) {
 
     try {
         string filtered_code = PrePro::filter(code);
-        Parser::run(filtered_code);
+        Node* root = parser.run(filtered_code);
+        cout << root->Evaluate() << endl;
     } catch (const exception &e) {
         cout << "Error: " << e.what() << endl;
         return 1;

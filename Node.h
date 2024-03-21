@@ -12,6 +12,7 @@ public:
     NodeValue value;
     NodeList children;
     Node(const NodeValue& val) : value(val) {}
+    int Evaluate() { return 0; };
 };
 
 class BinOp : public Node {
@@ -32,9 +33,7 @@ public:
             case '*':
                 return left_value * right_value;
             case '/':
-                if (right_value == 0) {
-                    throw invalid_argument("Division by zero");
-                }
+                if (right_value == 0) { throw invalid_argument("Division by zero"); }
                 return left_value / right_value;
             default:
                 throw invalid_argument("Invalid binary operation");

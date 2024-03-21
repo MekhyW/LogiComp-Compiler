@@ -75,6 +75,7 @@ public:
 
     Token selectNext() {
         updateNextToken();
+        //cout << "Next Token: " << next.type << " " << next.value << endl;
         return next;
     }
 };
