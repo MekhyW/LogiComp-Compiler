@@ -28,14 +28,8 @@ int main(int argc, char *argv[]) {
     }
     file.close();
 
-    try {
-        string filtered_code = PrePro::filter(code);
-        shared_ptr<Node> root = parser.run(filtered_code);
-        cout << root->Evaluate() << endl;
-    } catch (const exception &e) {
-        cout << "Error: " << e.what() << endl;
-        return 1;
-    }
-
+    string filtered_code = PrePro::filter(code);
+    shared_ptr<Node> root = parser.run(filtered_code);
+    cout << root->Evaluate() << endl;
     return 0;
 }
