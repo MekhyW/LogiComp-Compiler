@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     try {
         string filtered_code = PrePro::filter(code);
-        Node* root = parser.run(filtered_code);
+        shared_ptr<Node> root = parser.run(filtered_code);
         cout << root->Evaluate() << endl;
     } catch (const exception &e) {
         cout << "Error: " << e.what() << endl;

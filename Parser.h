@@ -11,56 +11,69 @@ private:
     static Token current_token;
 
 public:
-    Node* parse_factor() {
+    shared_ptr<Node> parse_factor() {
         if (current_token.type == "INT") {
             int value = current_token.value;
             current_token = tokenizer.selectNext();
-            return new IntVal(value);
+            return make_shared<IntVal>(value);
         } else if (current_token.type == "PLUS" || current_token.type == "MINUS") {
             Token op_token = current_token;
             current_token = tokenizer.selectNext();
-            if (op_token.type == "PLUS") { return new UnOp('+', *parse_factor()); }
-            else { return new UnOp('-', *parse_factor()); }
+            if (op_token.type == "PLUS") {
+                return make_shared<UnOp>('+', parse_factor());
+            } else {
+                return make_shared<UnOp>('-', parse_factor());
+            }
         } else if (current_token.type == "LPAREN") {
             current_token = tokenizer.selectNext();
-            Node* expression = parse_expression();
-            if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')'"); }
-            if (current_token.type != "EOF") { current_token = tokenizer.selectNext(); }
+            shared_ptr<Node> expression = parse_expression();
+            if (current_token.type != "RPAREN") {
+                throw invalid_argument("Expected ')'");
+            }
+            current_token = tokenizer.selectNext();
             return expression;
         } else {
             throw invalid_argument("Expected number, '+', '-' or '('");
         }
     }
 
-    Node* parse_term() {
-        Node* term = parse_factor();
+    shared_ptr<Node> parse_term() {
+        shared_ptr<Node> term = parse_factor();
         while (current_token.type == "MULT" || current_token.type == "DIV") {
             Token op_token = current_token;
             current_token = tokenizer.selectNext();
-            Node* next_factor = parse_factor();
-            if (op_token.type == "MULT") { term = new BinOp('*', *term, *next_factor); }
-            else { term = new BinOp('/', *term, *next_factor); }
+            shared_ptr<Node> next_factor = parse_factor();
+            if (op_token.type == "MULT") {
+                term = make_shared<BinOp>('*', term, next_factor);
+            } else {
+                term = make_shared<BinOp>('/', term, next_factor);
+            }
         }
         return term;
     }
 
-    Node* parse_expression() {
-        Node* expression = parse_term();
+    shared_ptr<Node> parse_expression() {
+        shared_ptr<Node> expression = parse_term();
         while (current_token.type == "PLUS" || current_token.type == "MINUS") {
             Token op_token = current_token;
             current_token = tokenizer.selectNext();
-            Node* next_term = parse_term();
-            if (op_token.type == "PLUS") { expression = new BinOp('+', *expression, *next_term); }
-            else { expression = new BinOp('-', *expression, *next_term); }
+            shared_ptr<Node> next_term = parse_term();
+            if (op_token.type == "PLUS") {
+                expression = make_shared<BinOp>('+', expression, next_term);
+            } else {
+                expression = make_shared<BinOp>('-', expression, next_term);
+            }
         }
         return expression;
     }
 
-    Node* run(string code) {
+    shared_ptr<Node> run(const string& code) {
         tokenizer = Tokenizer(code);
         current_token = tokenizer.selectNext();
-        Node* root = parse_expression();
-        if (current_token.type!= "EOF") { throw invalid_argument("Expected EOF"); }
+        shared_ptr<Node> root = parse_expression();
+        if (current_token.type != "EOF") {
+            throw invalid_argument("Expected EOF");
+        }
         return root;
     }
 };

@@ -1,30 +1,23 @@
 #include <iostream>
-#include <vector>
-#include <variant>
+#include <memory>
+#include <stdexcept>
+
 using namespace std;
-using NodeValue = variant<int, char>;
 
 class Node;
-using NodeList = vector<Node>;
+using NodePtr = shared_ptr<Node>;
 
 class Node {
 public:
-    NodeValue value;
-    NodeList children;
-    Node(const NodeValue& val) : value(val) {}
-    int Evaluate() { return 0; };
+    virtual int Evaluate() const = 0;
 };
 
 class BinOp : public Node {
 public:
-    BinOp(const NodeValue& val, const Node& left, const Node& right) : Node(val) {
-        children.push_back(left);
-        children.push_back(right);
-    }
-    int Evaluate() {
-        int left_value = get<int>(children[0].value);
-        int right_value = get<int>(children[1].value);
-        char op = get<char>(value);
+    BinOp(char op, NodePtr left, NodePtr right) : op(op), left(move(left)), right(move(right)) {}
+    int Evaluate() const override {
+        int left_value = left->Evaluate();
+        int right_value = right->Evaluate();
         switch (op) {
             case '+':
                 return left_value + right_value;
@@ -39,16 +32,16 @@ public:
                 throw invalid_argument("Invalid binary operation");
         }
     }
+private:
+    char op;
+    NodePtr left, right;
 };
 
 class UnOp : public Node {
 public:
-    UnOp(const NodeValue& val, const Node& child) : Node(val) {
-        children.push_back(child);
-    }
-    int Evaluate() {
-        int child_value = get<int>(children[0].value);
-        char op = get<char>(value);
+    UnOp(char op, NodePtr child) : op(op), child(move(child)) {}
+    int Evaluate() const override {
+        int child_value = child->Evaluate();
         switch (op) {
             case '+':
                 return child_value;
@@ -58,20 +51,24 @@ public:
                 throw invalid_argument("Invalid unary operation");
         }
     }
+private:
+    char op;
+    NodePtr child;
 };
 
 class IntVal : public Node {
 public:
-    IntVal(const int& val) : Node(val) {}
-    int Evaluate() {
-        return get<int>(value);
+    IntVal(int val) : value(val) {}
+    int Evaluate() const override {
+        return value;
     }
+private:
+    int value;
 };
 
 class NoOp : public Node {
 public:
-    NoOp() : Node(0) {}
-    int Evaluate() {
+    int Evaluate() const override {
         return 0;
     }
 };
