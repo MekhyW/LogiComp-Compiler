@@ -34,9 +34,11 @@ public:
             string identifier = current_token.type;
             current_token = tokenizer.selectNext();
             if (current_token.type == "ASSIGN") {
+                if (identifier == "NUMBER") { throw invalid_argument("Cannot assign to number"); }
                 current_token = tokenizer.selectNext();
                 return make_shared<AssignmentNode>(identifier, parse_expression());
-            } else { throw invalid_argument("Expected '=' after identifier"); }
+            }
+            else { throw invalid_argument("Expected '=' after identifier"); }
         }
     }
 

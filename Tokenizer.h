@@ -43,11 +43,11 @@ public:
                     position++;
                 }
                 return;
-            } else if (isalpha(current_char)) {
+            } else if (isalpha(current_char) || current_char == '_') {
                 string identifier;
                 identifier += current_char;
                 position++;
-                while (position < source.size() && (isalpha(source[position]) || isdigit(source[position]))) {
+                while (position < source.size() && (isalpha(source[position]) || isdigit(source[position]) || source[position] == '_')) {
                     identifier += source[position];
                     position++;
                 }
