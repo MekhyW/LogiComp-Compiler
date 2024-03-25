@@ -1,5 +1,8 @@
 #include <iostream>
 #include <string>
+#include <cctype>
+#include <unordered_map>
+#include <stdexcept>
 using namespace std;
 
 class Token {
@@ -8,56 +11,30 @@ public:
     int value;
 };
 
-
 class Tokenizer {
 private:
     string source;
     size_t position;
     Token next;
+    unordered_map<string, string> keywordMap;
 
 public:
-    Tokenizer(string src) : source(src), position(0), next({ "", 0 }) {}
+    Tokenizer(string src) : source(src), position(0), next({ "", 0 }) {
+        keywordMap["+"] = "PLUS";
+        keywordMap["-"] = "MINUS";
+        keywordMap["*"] = "MULT";
+        keywordMap["/"] = "DIV";
+        keywordMap["("] = "LPAREN";
+        keywordMap[")"] = "RPAREN";
+    }
 
     void updateNextToken() {
-        if (source.empty()) {
-            throw invalid_argument("Empty Input");
-        }
+        if (source.empty()) { throw invalid_argument("Empty Input"); }
         while (position < source.size()) {
             char current_char = source[position];
-            if (current_char == ' ' || current_char == '\n') {
-                position++;
-            } else if (current_char == '+') {
-                next.type = "PLUS";
-                next.value = 0;
-                position++;
-                return;
-            } else if (current_char == '-') {
-                next.type = "MINUS";
-                next.value = 0;
-                position++;
-                return;
-            } else if (current_char == '*') {
-                next.type = "MULT";
-                next.value = 0;
-                position++;
-                return;
-            } else if (current_char == '/') {
-                next.type = "DIV";
-                next.value = 0;
-                position++;
-                return;
-            } else if (current_char == '(') {
-                next.type = "LPAREN";
-                next.value = 0;
-                position++;
-                return;
-            } else if (current_char == ')') {
-                next.type = "RPAREN";
-                next.value = 0;
-                position++;
-                return;
-            } else if (isdigit(current_char)) {
-                next.type = "INT";
+            if (current_char == ' ' || current_char == '\n') { position++; }
+            else if (isdigit(current_char)) {
+                next.type = "NUMBER";
                 next.value = current_char - '0';
                 position++;
                 while (position < source.size() && isdigit(source[position])) {
@@ -65,8 +42,25 @@ public:
                     position++;
                 }
                 return;
+            } else if (isalpha(current_char)) {
+                string identifier;
+                identifier += current_char;
+                position++;
+                while (position < source.size() && (isalpha(source[position]) || isdigit(source[position]))) {
+                    identifier += source[position];
+                    position++;
+                }
+                if (keywordMap.find(identifier) != keywordMap.end()) { next.type = keywordMap[identifier]; }
+                else if (identifier == "print") { next.type = "PRINT"; }
+                else { next.type = "IDENTIFIER"; }
+                return;
             } else {
-                throw invalid_argument("Invalid char: '" + string(1, current_char) + "' NOT ALLOWED !");
+                string current_char_str(1, current_char);
+                if (keywordMap.find(current_char_str) != keywordMap.end()) { next.type = keywordMap[current_char_str]; }
+                else { throw invalid_argument("Invalid character: '" + current_char_str + "'"); }
+                next.value = 0;
+                position++;
+                return;
             }
         }
         next.type = "EOF";
@@ -75,7 +69,6 @@ public:
 
     Token selectNext() {
         updateNextToken();
-        //cout << "Next Token: " << next.type << " " << next.value << endl;
         return next;
     }
 };
