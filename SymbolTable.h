@@ -1,3 +1,4 @@
+#include <iostream>
 #include <unordered_map>
 #include <string>
 #include <stdexcept>
@@ -12,7 +13,7 @@ public:
         variables[name] = value;
     }
 
-    int getVariable(const string& name) const {
+    int getVariable(const string& name) {
         if (variables.find(name) != variables.end()) { return variables.at(name); }
         else { throw invalid_argument("Variable not found"); }
     }

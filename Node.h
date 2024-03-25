@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <vector>
 #include "SymbolTable.h"
-
 using namespace std;
 
 class Node;
@@ -13,8 +12,9 @@ using NodePtr = shared_ptr<Node>;
 
 class Node {
 public:
+    vector<NodePtr> statements;
     virtual int Evaluate(SymbolTable& symbolTable) const = 0;
-    void add_statement(NodePtr statement) {}
+    void add_statement(NodePtr statement) { statements.push_back(statement); }
 };
 
 class BinOpNode : public Node {
@@ -69,7 +69,7 @@ class VarNode : public Node {
 public:
     VarNode(string identifier) : identifier(identifier) {}
     int Evaluate(SymbolTable& symbol_table) const override {
-        if (symbol_table.getVariable(identifier)!= 0) { return symbol_table.getVariable(identifier); }
+        if (symbol_table.getVariable(identifier) != 0) { return symbol_table.getVariable(identifier); }
         else { throw invalid_argument("Undefined variable: " + identifier); }
     }
 private:
@@ -103,12 +103,9 @@ private:
 
 class BlockNode : public Node {
 public:
-    void add_statement(NodePtr statement) { statements.push_back(statement); }
     int Evaluate(SymbolTable& symbol_table) const override {
         int result = 0;
         for (const auto& statement : statements) { result = statement->Evaluate(symbol_table); }
         return result;
     }
-private:
-    vector<NodePtr> statements;
 };

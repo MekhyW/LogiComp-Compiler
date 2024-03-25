@@ -26,6 +26,7 @@ public:
         keywordMap["/"] = "DIV";
         keywordMap["("] = "LPAREN";
         keywordMap[")"] = "RPAREN";
+        keywordMap["="] = "ASSIGN";
     }
 
     void updateNextToken() {
@@ -52,7 +53,7 @@ public:
                 }
                 if (keywordMap.find(identifier) != keywordMap.end()) { next.type = keywordMap[identifier]; }
                 else if (identifier == "print") { next.type = "PRINT"; }
-                else { next.type = "IDENTIFIER"; }
+                else { next.type = identifier; }
                 return;
             } else {
                 string current_char_str(1, current_char);

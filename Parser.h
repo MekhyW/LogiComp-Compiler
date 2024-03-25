@@ -18,14 +18,7 @@ public:
     }
 
     shared_ptr<Node> parse_statement() {
-        if (current_token.type == "IDENTIFIER") {
-            string identifier = to_string(current_token.value);
-            current_token = tokenizer.selectNext();
-            if (current_token.type == "ASSIGN") {
-                current_token = tokenizer.selectNext();
-                return make_shared<AssignmentNode>(identifier, parse_expression());
-            } else { throw invalid_argument("Expected '=' after identifier"); }
-        } else if (current_token.type == "PRINT") {
+        if (current_token.type == "PRINT") {
             current_token = tokenizer.selectNext();
             if (current_token.type == "LPAREN") {
                 current_token = tokenizer.selectNext();
@@ -37,7 +30,14 @@ public:
             else { throw invalid_argument("Expected '(' after print keyword"); }
         }
         else if (current_token.type == "EOF") { return make_shared<NoOpNode>(); }
-        else { throw invalid_argument("Invalid statement"); }
+        else { 
+            string identifier = current_token.type;
+            current_token = tokenizer.selectNext();
+            if (current_token.type == "ASSIGN") {
+                current_token = tokenizer.selectNext();
+                return make_shared<AssignmentNode>(identifier, parse_expression());
+            } else { throw invalid_argument("Expected '=' after identifier"); }
+        }
     }
 
     shared_ptr<Node> parse_expression() {
@@ -75,21 +75,18 @@ public:
             if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after expression"); }
             current_token = tokenizer.selectNext();
             return expression_node;
-        } else if (current_token.type == "IDENTIFIER") {
-            string identifier = to_string(current_token.value);
+        } else {
+            string identifier = current_token.type;
             current_token = tokenizer.selectNext();
             return make_shared<VarNode>(identifier);
-        } 
-        else { throw invalid_argument("Invalid factor"); }
+        }
     }
 
     shared_ptr<Node> run(const string& code) {
         tokenizer = Tokenizer(code);
         current_token = tokenizer.selectNext();
-        shared_ptr<Node> root = parse_expression();
-        if (current_token.type != "EOF") {
-            throw invalid_argument("Expected EOF");
-        }
+        shared_ptr<Node> root = parse_block();
+        if (current_token.type != "EOF") { throw invalid_argument("Expected EOF"); }
         return root;
     }
 };
