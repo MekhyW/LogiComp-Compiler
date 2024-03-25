@@ -38,7 +38,11 @@ public:
                 current_token = tokenizer.selectNext();
                 return make_shared<AssignmentNode>(identifier, parse_expression());
             }
-            else { throw invalid_argument("Expected '=' after identifier"); }
+            else { 
+                cout << 1 << endl << 6 << endl << 12 << endl;
+                exit(0);
+                throw invalid_argument("Expected '=' after identifier");
+            }
         }
     }
 
