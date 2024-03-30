@@ -20,25 +20,21 @@ public:
     shared_ptr<Node> parse_statement() {
         if (current_token.type == "PRINT") {
             current_token = tokenizer.selectNext();
-            if (current_token.type == "LPAREN") {
-                current_token = tokenizer.selectNext();
-                shared_ptr<Node> expression_node = parse_expression();
-                if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after print expression"); }
-                current_token = tokenizer.selectNext();
-                return make_shared<PrintNode>(expression_node);
-            } 
-            else { throw invalid_argument("Expected '(' after print keyword"); }
+            if (current_token.type != "LPAREN") { throw invalid_argument("Expected '(' after print keyword"); }
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> expression_node = parse_expression();
+            if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after print expression"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<PrintNode>(expression_node);
         }
         else if (current_token.type == "EOF") { return make_shared<NoOpNode>(); }
         else { 
             string identifier = current_token.type;
             current_token = tokenizer.selectNext();
-            if (current_token.type == "ASSIGN") {
-                if (identifier == "NUMBER") { throw invalid_argument("Cannot assign to number"); }
-                current_token = tokenizer.selectNext();
-                return make_shared<AssignmentNode>(identifier, parse_expression());
-            }
-            else { throw invalid_argument("Expected '=' after identifier"); }
+            if (current_token.type != "ASSIGN") { throw invalid_argument("Expected '=' after identifier"); }
+            if (identifier == "NUMBER") { throw invalid_argument("Cannot assign to number"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<AssignmentNode>(identifier, parse_expression());
         }
     }
 
