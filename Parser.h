@@ -73,6 +73,12 @@ public:
             if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after expression"); }
             current_token = tokenizer.selectNext();
             return expression_node;
+        } else if (current_token.type == "MINUS") {
+            current_token = tokenizer.selectNext();
+            return make_shared<BinOpNode>("-", make_shared<IntValNode>(0), parse_factor());
+        } else if (current_token.type == "PLUS") {
+            current_token = tokenizer.selectNext();
+            return parse_factor();
         } else {
             string identifier = current_token.type;
             current_token = tokenizer.selectNext();
