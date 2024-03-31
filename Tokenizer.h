@@ -24,9 +24,11 @@ public:
         keywordMap["-"] = "MINUS";
         keywordMap["*"] = "MULT";
         keywordMap["/"] = "DIV";
+        keywordMap["%"] = "MOD";
         keywordMap["("] = "LPAREN";
         keywordMap[")"] = "RPAREN";
         keywordMap["="] = "ASSIGN";
+        keywordMap["print"] = "PRINT";
     }
 
     void updateNextToken() {
@@ -52,7 +54,6 @@ public:
                     position++;
                 }
                 if (keywordMap.find(identifier) != keywordMap.end()) { next.type = keywordMap[identifier]; }
-                else if (identifier == "print") { next.type = "PRINT"; }
                 else { next.type = identifier; }
                 return;
             } else {

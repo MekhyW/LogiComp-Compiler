@@ -29,6 +29,10 @@ public:
         else if (op == "/") {
             if (right_value == 0) { throw invalid_argument("Division by zero"); }
             return left_value / right_value;
+        }
+        else if (op == "%") {
+            if (right_value == 0) { throw invalid_argument("Division by zero"); }
+            return left_value % right_value;
         } 
         else { throw invalid_argument("Invalid binary operation"); }
     }

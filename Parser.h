@@ -52,12 +52,13 @@ public:
 
     shared_ptr<Node> parse_term() {
         shared_ptr<Node> term_node = parse_factor();
-        while (current_token.type == "MULT" || current_token.type == "DIV") {
+        while (current_token.type == "MULT" || current_token.type == "DIV" || current_token.type == "MOD") {
             Token op_token = current_token;
             current_token = tokenizer.selectNext();
             shared_ptr<Node> next_factor_node = parse_factor();
             if (op_token.type == "MULT") { term_node = make_shared<BinOpNode>("*", term_node, next_factor_node); }
-            else { term_node = make_shared<BinOpNode>("/", term_node, next_factor_node); }
+            else if (op_token.type == "DIV") { term_node = make_shared<BinOpNode>("/", term_node, next_factor_node); }
+            else { term_node = make_shared<BinOpNode>("%", term_node, next_factor_node); }
         }
         return term_node;
     }
