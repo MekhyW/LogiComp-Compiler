@@ -10,7 +10,7 @@
 <li>ASSIGNMENT = IDENTIFIER, "=", EXPRESSION ;
 <li>PRINT = "print", "(", EXPRESSION, ")" ;
 <li>EXPRESSION = TERM, { ("+" | "-"), TERM } ;
-<li>TERM = FACTOR, { ("*" | "/"), FACTOR } ;
+<li>TERM = FACTOR, { ("*" | "/" | "%"), FACTOR } ;
 <li>FACTOR = (("+" | "-"), FACTOR) | NUMBER | "(", EXPRESSION, ")" | IDENTIFIER ;
 <li>IDENTIFIER = LETTER, { LETTER | DIGIT | "_" } ;
 <li>NUMBER = DIGIT, { DIGIT } ;
