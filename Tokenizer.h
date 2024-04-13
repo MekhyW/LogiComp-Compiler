@@ -28,6 +28,22 @@ public:
         keywordMap["("] = "LPAREN";
         keywordMap[")"] = "RPAREN";
         keywordMap["="] = "ASSIGN";
+        keywordMap["=="] = "EQ";
+        keywordMap["~="] = "NEQ";
+        keywordMap["<"] = "LT";
+        keywordMap["<="] = "LE";
+        keywordMap[">"] = "GT";
+        keywordMap[">="] = "GE";
+        keywordMap["not"] = "NOT";
+        keywordMap["and"] = "AND";
+        keywordMap["or"] = "OR";
+        keywordMap["if"] = "IF";
+        keywordMap["else"] = "ELSE";
+        keywordMap["then"] = "THEN";
+        keywordMap["while"] = "WHILE";
+        keywordMap["do"] = "DO";
+        keywordMap["end"] = "END";
+        keywordMap["read"] = "READ";
         keywordMap["print"] = "PRINT";
     }
 
@@ -46,10 +62,10 @@ public:
                 }
                 return;
             } else if (isalpha(current_char) || current_char == '_') {
-                string identifier;
+                string identifier = "";
                 identifier += current_char;
                 position++;
-                while (position < source.size() && (isalpha(source[position]) || isdigit(source[position]) || source[position] == '_')) {
+                while (position < source.size() && (isalnum(source[position]) || source[position] == '_')) {
                     identifier += source[position];
                     position++;
                 }
@@ -57,11 +73,15 @@ public:
                 else { next.type = identifier; }
                 return;
             } else {
-                string current_char_str(1, current_char);
-                if (keywordMap.find(current_char_str) != keywordMap.end()) { next.type = keywordMap[current_char_str]; }
-                else { throw invalid_argument("Invalid character: '" + current_char_str + "'"); }
-                next.value = 0;
+                string identifier = "";
+                identifier += current_char;
                 position++;
+                while (position < source.size() && !isalnum(source[position]) && source[position] != '_' && source[position] != ' ' && source[position] != '\n') {
+                    identifier += source[position];
+                    position++;
+                }
+                if (keywordMap.find(identifier) != keywordMap.end()) { next.type = keywordMap[identifier]; }
+                else { throw invalid_argument("Invalid word: '" + identifier + "'"); }
                 return;
             }
         }

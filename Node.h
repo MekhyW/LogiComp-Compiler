@@ -33,7 +33,15 @@ public:
         else if (op == "%") {
             if (right_value == 0) { throw invalid_argument("Division by zero"); }
             return left_value % right_value;
-        } 
+        }
+        else if (op == "==") { return left_value == right_value; }
+        else if (op == "!=") { return left_value != right_value; }
+        else if (op == "<") { return left_value < right_value; }
+        else if (op == "<=") { return left_value <= right_value; }
+        else if (op == ">") { return left_value > right_value; }
+        else if (op == ">=") { return left_value >= right_value; }
+        else if (op == "and") { return left_value && right_value; }
+        else if (op == "or") { return left_value || right_value; } 
         else { throw invalid_argument("Invalid binary operation"); }
     }
 private:
@@ -48,6 +56,7 @@ public:
         int child_value = child->Evaluate(symbol_table);
         if (op == "+") { return child_value; }
         else if (op == "-") { return -child_value; }
+        else if (op == "not") { return !child_value; }
         else { throw invalid_argument("Invalid unary operation"); }
     }
 private:
@@ -78,6 +87,16 @@ public:
     }
 private:
     string identifier;
+};
+
+class ReadNode : public Node {
+public:
+    ReadNode() = default;
+    int Evaluate(SymbolTable& symbol_table) const override {
+        int value;
+        cin >> value;
+        return value;
+    }
 };
 
 class PrintNode : public Node {
