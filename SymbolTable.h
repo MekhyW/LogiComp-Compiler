@@ -15,6 +15,6 @@ public:
 
     int getVariable(const string& name) {
         if (variables.find(name) != variables.end()) { return variables.at(name); }
-        else { throw invalid_argument("Variable not found"); }
+        else { throw invalid_argument("Undefined variable: " + name); }
     }
 };

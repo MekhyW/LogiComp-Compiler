@@ -81,8 +81,7 @@ class VarNode : public Node {
 public:
     VarNode(string identifier) : identifier(identifier) {}
     int Evaluate(SymbolTable& symbol_table) const override {
-        if (symbol_table.getVariable(identifier) != 0) { return symbol_table.getVariable(identifier); }
-        else { throw invalid_argument("Undefined variable: " + identifier); }
+        return symbol_table.getVariable(identifier);
     }
 private:
     string identifier;
