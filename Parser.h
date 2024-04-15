@@ -147,22 +147,35 @@ public:
             int value = current_token.value;
             current_token = tokenizer.selectNext();
             return make_shared<IntValNode>(value);
-        } else if (current_token.type == "LPAREN") {
+        }
+        else if (current_token.type == "LPAREN") {
             current_token = tokenizer.selectNext();
             shared_ptr<Node> bool_expression_node = parse_boolexpression();
             if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after expression"); }
             current_token = tokenizer.selectNext();
             return bool_expression_node;
-        } else if (current_token.type == "MINUS") {
+        }
+        else if (current_token.type == "MINUS") {
             current_token = tokenizer.selectNext();
             return make_shared<BinOpNode>("-", make_shared<IntValNode>(0), parse_factor());
-        } else if (current_token.type == "PLUS") {
+        }
+        else if (current_token.type == "PLUS") {
             current_token = tokenizer.selectNext();
             return parse_factor();
-        } else if (current_token.type == "NOT") {
+        }
+        else if (current_token.type == "NOT") {
             current_token = tokenizer.selectNext();
             return make_shared<UnOpNode>("not", parse_factor());
-        } else {
+        }
+        else if (current_token.type == "READ") {
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "LPAREN") { throw invalid_argument("Expected '(' after read"); }
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after read"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<ReadNode>();
+        }
+        else {
             string identifier = current_token.type;
             current_token = tokenizer.selectNext();
             return make_shared<VarNode>(identifier);

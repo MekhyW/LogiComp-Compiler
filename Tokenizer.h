@@ -92,7 +92,7 @@ public:
 
     Token selectNext() {
         updateNextToken();
-        cout << "Type: " << next.type << ", Value: " << next.value << endl;
+        //cout << "Type: " << next.type << ", Value: " << next.value << endl;
         return next;
     }
 };
