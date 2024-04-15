@@ -13,17 +13,24 @@ private:
 public:
     shared_ptr<Node> parse_block() {
         shared_ptr<Node> block_node = make_shared<BlockNode>();
-        while (current_token.type != "EOF") { block_node->add_statement(parse_statement()); }
+        while (current_token.type != "EOF" && current_token.type != "END") { block_node->add_statement(parse_statement()); }
         return block_node;
     }
 
     shared_ptr<Node> parse_statement() {
-        if (current_token.type == "PRINT") {
+        if (current_token.type == "EOF") { return make_shared<NoOpNode>(); }
+        else if (current_token.type == "NEWLINE" || current_token.type == "END" || current_token.type == "ELSE") {
+            current_token = tokenizer.selectNext(); 
+            return make_shared<NoOpNode>(); 
+        }
+        else if (current_token.type == "PRINT") {
             current_token = tokenizer.selectNext();
             if (current_token.type != "LPAREN") { throw invalid_argument("Expected '(' after print keyword"); }
             current_token = tokenizer.selectNext();
-            shared_ptr<Node> expression_node = parse_expression();
+            shared_ptr<Node> expression_node = parse_boolexpression();
             if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after print expression"); }
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after print statement"); }
             current_token = tokenizer.selectNext();
             return make_shared<PrintNode>(expression_node);
         }
@@ -32,8 +39,11 @@ public:
             shared_ptr<Node> condition = parse_boolexpression();
             if (current_token.type != "DO") { throw invalid_argument("Expected 'do' after while expression"); }
             current_token = tokenizer.selectNext();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after while expression"); }
             shared_ptr<Node> block_node = parse_block();
             if (current_token.type != "END") { throw invalid_argument("Expected 'end' after while block"); }
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after while block"); }
             current_token = tokenizer.selectNext();
             return make_shared<WhileNode>(condition, block_node);
         }
@@ -42,6 +52,7 @@ public:
             shared_ptr<Node> condition = parse_boolexpression();
             if (current_token.type != "THEN") { throw invalid_argument("Expected 'then' after if expression"); }
             current_token = tokenizer.selectNext();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after if expression"); }
             shared_ptr<Node> block_node = parse_block();
             shared_ptr<Node> else_block_node = make_shared<NoOpNode>();
             if (current_token.type == "ELSE") {
@@ -50,16 +61,20 @@ public:
             }
             if (current_token.type != "END") { throw invalid_argument("Expected 'end' after if block"); }
             current_token = tokenizer.selectNext();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after if block"); }
+            current_token = tokenizer.selectNext();
             return make_shared<IfNode>(condition, block_node, else_block_node);
         }
-        else if (current_token.type == "EOF") { return make_shared<NoOpNode>(); }
         else { 
             string identifier = current_token.type;
-            current_token = tokenizer.selectNext();
-            if (current_token.type != "ASSIGN") { throw invalid_argument("Expected '=' after identifier"); }
             if (identifier == "NUMBER") { throw invalid_argument("Cannot assign to number"); }
             current_token = tokenizer.selectNext();
-            return make_shared<AssignmentNode>(identifier, parse_expression());
+            if (current_token.type != "ASSIGN") { throw invalid_argument("Expected '=' after identifier"); }
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> bolexp_node = parse_boolexpression();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after assignment"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<AssignmentNode>(identifier, bolexp_node);
         }
     }
 
@@ -134,10 +149,10 @@ public:
             return make_shared<IntValNode>(value);
         } else if (current_token.type == "LPAREN") {
             current_token = tokenizer.selectNext();
-            shared_ptr<Node> expression_node = parse_expression();
+            shared_ptr<Node> bool_expression_node = parse_boolexpression();
             if (current_token.type != "RPAREN") { throw invalid_argument("Expected ')' after expression"); }
             current_token = tokenizer.selectNext();
-            return expression_node;
+            return bool_expression_node;
         } else if (current_token.type == "MINUS") {
             current_token = tokenizer.selectNext();
             return make_shared<BinOpNode>("-", make_shared<IntValNode>(0), parse_factor());

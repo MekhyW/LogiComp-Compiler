@@ -20,6 +20,7 @@ private:
 
 public:
     Tokenizer(string src) : source(src), position(0), next({ "", 0 }) {
+        keywordMap["\n"] = "NEWLINE";
         keywordMap["+"] = "PLUS";
         keywordMap["-"] = "MINUS";
         keywordMap["*"] = "MULT";
@@ -51,7 +52,7 @@ public:
         if (source.empty()) { throw invalid_argument("Empty Input"); }
         while (position < source.size()) {
             char current_char = source[position];
-            if (current_char == ' ' || current_char == '\n') { position++; }
+            if (current_char == ' ' || current_char == '\t') { position++; }
             else if (isdigit(current_char)) {
                 next.type = "NUMBER";
                 next.value = current_char - '0';
@@ -76,7 +77,7 @@ public:
                 string identifier = "";
                 identifier += current_char;
                 position++;
-                while (position < source.size() && !isalnum(source[position]) && source[position] != '_' && source[position] != ' ' && source[position] != '\n') {
+                while (position < source.size() && source[position] == '=') {
                     identifier += source[position];
                     position++;
                 }
@@ -91,6 +92,7 @@ public:
 
     Token selectNext() {
         updateNextToken();
+        cout << "Type: " << next.type << ", Value: " << next.value << endl;
         return next;
     }
 };

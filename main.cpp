@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     }
     file.close();
 
-    string filtered_code = PrePro::filter(code);
+    string filtered_code = PrePro::preprocess(code);
     shared_ptr<Node> root = parser.run(filtered_code);
     root->Evaluate(table);
 

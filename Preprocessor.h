@@ -3,7 +3,7 @@ using namespace std;
 
 class PrePro {
 public:
-    static string filter(const string& input) {
+    static string remove_comments(const string& input) {
         string filtered;
         bool in_comment = false;
         for (size_t i = 0; i < input.size(); ++i) {
@@ -18,5 +18,16 @@ public:
             }
         }
         return filtered;
+    }
+
+    static string add_newline_eof(const string& input) {
+        if (input.size() == 0 || input[input.size() - 1] != '\n') {
+            return input + "\n";
+        }
+        return input;
+    }
+
+    static string preprocess(const string& input) {
+        return add_newline_eof(remove_comments(input));
     }
 };
