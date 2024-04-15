@@ -27,6 +27,31 @@ public:
             current_token = tokenizer.selectNext();
             return make_shared<PrintNode>(expression_node);
         }
+        else if (current_token.type == "WHILE") {
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> condition = parse_boolexpression();
+            if (current_token.type != "DO") { throw invalid_argument("Expected 'do' after while expression"); }
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> block_node = parse_block();
+            if (current_token.type != "END") { throw invalid_argument("Expected 'end' after while block"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<WhileNode>(condition, block_node);
+        }
+        else if (current_token.type == "IF") {
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> condition = parse_boolexpression();
+            if (current_token.type != "THEN") { throw invalid_argument("Expected 'then' after if expression"); }
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> block_node = parse_block();
+            shared_ptr<Node> else_block_node = make_shared<NoOpNode>();
+            if (current_token.type == "ELSE") {
+                current_token = tokenizer.selectNext();
+                else_block_node = parse_block();
+            }
+            if (current_token.type != "END") { throw invalid_argument("Expected 'end' after if block"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<IfNode>(condition, block_node, else_block_node);
+        }
         else if (current_token.type == "EOF") { return make_shared<NoOpNode>(); }
         else { 
             string identifier = current_token.type;
@@ -36,6 +61,45 @@ public:
             current_token = tokenizer.selectNext();
             return make_shared<AssignmentNode>(identifier, parse_expression());
         }
+    }
+
+    shared_ptr<Node> parse_boolexpression() {
+        shared_ptr<Node> bool_expression_node = parse_boolterm();
+        while (current_token.type == "OR") {
+            Token op_token = current_token;
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> next_bool_term_node = parse_boolterm();
+            bool_expression_node = make_shared<BinOpNode>("or", bool_expression_node, next_bool_term_node);
+        }
+        return bool_expression_node;
+    }
+
+    shared_ptr<Node> parse_boolterm() {
+        shared_ptr<Node> bool_term_node = parse_relexpression();
+        while (current_token.type == "AND") {
+            Token op_token = current_token;
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> next_rel_expression_node = parse_relexpression();
+            bool_term_node = make_shared<BinOpNode>("and", bool_term_node, next_rel_expression_node);
+        }
+        return bool_term_node;
+    }
+
+    shared_ptr<Node> parse_relexpression() {
+        shared_ptr<Node> relexpression_node = parse_expression();
+        while (current_token.type == "EQ" || current_token.type == "NEQ" 
+        || current_token.type == "GT" || current_token.type == "LT" || current_token.type == "GE" || current_token.type == "LE") {
+            Token op_token = current_token;
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> next_expression_node = parse_expression();
+            if (op_token.type == "GT") { relexpression_node = make_shared<BinOpNode>(">", relexpression_node, next_expression_node); }
+            else if (op_token.type == "LT") { relexpression_node = make_shared<BinOpNode>("<", relexpression_node, next_expression_node); }
+            else if (op_token.type == "GE") { relexpression_node = make_shared<BinOpNode>(">=", relexpression_node, next_expression_node); }
+            else if (op_token.type == "LE") { relexpression_node = make_shared<BinOpNode>("<=", relexpression_node, next_expression_node); }
+            else if (op_token.type == "EQ") { relexpression_node = make_shared<BinOpNode>("==", relexpression_node, next_expression_node); }
+            else { relexpression_node = make_shared<BinOpNode>("!=", relexpression_node, next_expression_node); }
+        }
+        return relexpression_node;
     }
 
     shared_ptr<Node> parse_expression() {
@@ -80,6 +144,9 @@ public:
         } else if (current_token.type == "PLUS") {
             current_token = tokenizer.selectNext();
             return parse_factor();
+        } else if (current_token.type == "NOT") {
+            current_token = tokenizer.selectNext();
+            return make_shared<UnOpNode>("not", parse_factor());
         } else {
             string identifier = current_token.type;
             current_token = tokenizer.selectNext();

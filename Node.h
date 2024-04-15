@@ -69,7 +69,6 @@ public:
     int Evaluate(SymbolTable& symbol_table) const override { return 0; }
 };
 
-
 class IntValNode : public Node {
 public:
     IntValNode(int val) : value(val) {}
@@ -122,6 +121,30 @@ public:
 private:
     string identifier;
     NodePtr expression;
+};
+
+class WhileNode : public Node {
+public:
+    WhileNode(NodePtr condition, NodePtr block) : condition(move(condition)), block(move(block)) {}
+    int Evaluate(SymbolTable& symbol_table) const override {
+        int result = 0;
+        while (condition->Evaluate(symbol_table)) { result = block->Evaluate(symbol_table); }
+        return result;
+    }
+private:
+    NodePtr condition, block;
+};
+
+class IfNode : public Node {
+public:
+    IfNode(NodePtr condition, NodePtr block, NodePtr else_block) : condition(move(condition)), block(move(block)), else_block(move(else_block)) {}
+    int Evaluate(SymbolTable& symbol_table) const override {
+        int result = condition->Evaluate(symbol_table);
+        if (result) { return block->Evaluate(symbol_table); }
+        else { return else_block->Evaluate(symbol_table); }
+    }
+private:
+    NodePtr condition, block, else_block;
 };
 
 class BlockNode : public Node {
