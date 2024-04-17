@@ -13,7 +13,7 @@ private:
 public:
     shared_ptr<Node> parse_block() {
         shared_ptr<Node> block_node = make_shared<BlockNode>();
-        while (current_token.type != "EOF" && current_token.type != "END") { block_node->add_statement(parse_statement()); }
+        while (current_token.type != "EOF" && current_token.type != "END" && current_token.type != "ELSE") { block_node->add_statement(parse_statement()); }
         return block_node;
     }
 
