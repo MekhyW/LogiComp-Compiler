@@ -134,12 +134,13 @@ public:
 
     shared_ptr<Node> parse_expression() {
         shared_ptr<Node> expression_node = parse_term();
-        while (current_token.type == "PLUS" || current_token.type == "MINUS") {
+        while (current_token.type == "PLUS" || current_token.type == "MINUS" || current_token.type == "CONCAT") {
             Token op_token = current_token;
             current_token = tokenizer.selectNext();
             shared_ptr<Node> next_term_node = parse_term();
             if (op_token.type == "PLUS") { expression_node = make_shared<BinOpNode>("+", expression_node, next_term_node); }
-            else { expression_node = make_shared<BinOpNode>("-", expression_node, next_term_node); }
+            else if (op_token.type == "MINUS") { expression_node = make_shared<BinOpNode>("-", expression_node, next_term_node); } 
+            else if (op_token.type == "CONCAT") { expression_node = make_shared<BinOpNode>("..", expression_node, next_term_node); }
         }
         return expression_node;
     }
