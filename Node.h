@@ -34,11 +34,11 @@ public:
             if (holds_alternative<int>(left_value)) { left_str = to_string(get<int>(left_value)); }
             else if (holds_alternative<double>(left_value)) { left_str = to_string(get<double>(left_value)); }
             else if (holds_alternative<string>(left_value)) { left_str = get<string>(left_value); }
-            else if (holds_alternative<bool>(left_value)) { left_str = get<bool>(left_value) ? "true" : "false"; }
+            else if (holds_alternative<bool>(left_value)) { left_str = get<bool>(left_value) ? "1" : "0"; }
             if (holds_alternative<int>(right_value)) { right_str = to_string(get<int>(right_value)); }
             else if (holds_alternative<double>(right_value)) { right_str = to_string(get<double>(right_value)); }
             else if (holds_alternative<string>(right_value)) { right_str = get<string>(right_value); }
-            else if (holds_alternative<bool>(right_value)) { right_str = get<bool>(right_value) ? "true" : "false"; }
+            else if (holds_alternative<bool>(right_value)) { right_str = get<bool>(right_value) ? "1" : "0"; }
             return EvalResult(left_str + right_str);
         }
         else if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {

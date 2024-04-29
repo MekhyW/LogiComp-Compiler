@@ -17,9 +17,9 @@ private:
     string source;
     size_t position;
     Token next;
-    unordered_map<string, string> keywordMap;
 
 public:
+    unordered_map<string, string> keywordMap;
     Tokenizer(string src) : source(src), position(0), next({ "", 0 }) {
         keywordMap["\n"] = "NEWLINE";
         keywordMap["+"] = "PLUS";

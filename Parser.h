@@ -26,6 +26,9 @@ public:
         else if (current_token.type == "LOCAL") {
             current_token = tokenizer.selectNext();
             if (!isalpha(current_token.type[0])) { throw invalid_argument("Expected identifier after 'local'"); }
+            for (auto const& x : tokenizer.keywordMap) {
+                if (current_token.type == x.first || current_token.type == x.second) { throw invalid_argument("Cannot use keyword as variable name: " + current_token.type); }
+            }
             string var_name = current_token.type;
             current_token = tokenizer.selectNext();
             shared_ptr<Node> declaration_node = make_shared<VarDeclareNode>(var_name);
