@@ -10,7 +10,7 @@ using namespace std;
 
 class Node;
 using NodePtr = shared_ptr<Node>;
-using EvalResult = variant<int, string, double, bool>;
+using EvalResult = std::variant<int, string, double, bool>;
 
 class Node {
 public:

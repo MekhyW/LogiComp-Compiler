@@ -5,7 +5,7 @@
 #include <variant>
 using namespace std;
 
-using EvalResult = variant<int, string, double, bool>;
+using EvalResult = std::variant<int, string, double, bool>;
 
 class SymbolTable {
 private:
