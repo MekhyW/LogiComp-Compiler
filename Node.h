@@ -65,14 +65,17 @@ public:
         else if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=" || op == "and" || op == "or") { 
             bool left_bool;
             bool right_bool;
+            if (holds_alternative<string>(left_value) && holds_alternative<string>(right_value)) {
+                if (op == "==") { return EvalResult(get<string>(left_value) == get<string>(right_value)); }
+                else if (op == "!=") { return EvalResult(get<string>(left_value) != get<string>(right_value)); }
+                else { throw invalid_argument("Invalid operation on string type"); }
+            }
             if (holds_alternative<int>(left_value)) { left_bool = get<int>(left_value) != 0; }
             else if (holds_alternative<double>(left_value)) { left_bool = get<double>(left_value) != 0; }
             else if (holds_alternative<bool>(left_value)) { left_bool = get<bool>(left_value); }
-            else if (holds_alternative<string>(left_value)) { left_bool = !get<string>(left_value).empty(); }
             if (holds_alternative<int>(right_value)) { right_bool = get<int>(right_value) != 0; }
             else if (holds_alternative<double>(right_value)) { right_bool = get<double>(right_value) != 0; }
             else if (holds_alternative<bool>(right_value)) { right_bool = get<bool>(right_value); }
-            else if (holds_alternative<string>(right_value)) { right_bool = !get<string>(right_value).empty(); }
             if (op == "==") { return EvalResult(left_bool == right_bool); }
             else if (op == "!=") { return EvalResult(left_bool != right_bool); }
             else if (op == "<") { return EvalResult(left_bool < right_bool); }
