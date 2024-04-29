@@ -25,7 +25,7 @@ public:
     EvalResult Evaluate(SymbolTable& symbol_table) const override {
         EvalResult left_value = left->Evaluate(symbol_table);
         EvalResult right_value = right->Evaluate(symbol_table);
-        if (op != ".." && op != "==" && op != "!=" && (holds_alternative<string>(left_value) || holds_alternative<string>(right_value))) {
+        if (op != ".." && (holds_alternative<string>(left_value) != holds_alternative<string>(right_value))) {
             throw invalid_argument("Unsupported operation on string type");
         }
         if (op == "..") { 
@@ -74,6 +74,10 @@ public:
             if (holds_alternative<string>(left_value) && holds_alternative<string>(right_value)) {
                 if (op == "==") { return EvalResult(get<string>(left_value) == get<string>(right_value)); }
                 else if (op == "!=") { return EvalResult(get<string>(left_value) != get<string>(right_value)); }
+                else if (op == "<") { return EvalResult(get<string>(left_value) < get<string>(right_value)); }
+                else if (op == "<=") { return EvalResult(get<string>(left_value) <= get<string>(right_value)); }
+                else if (op == ">") { return EvalResult(get<string>(left_value) > get<string>(right_value)); }
+                else if (op == ">=") { return EvalResult(get<string>(left_value) >= get<string>(right_value)); }
                 else { throw invalid_argument("Invalid operation on string type"); }
             }
             if (op == "==") { return EvalResult(left_int == right_int); }
@@ -180,7 +184,7 @@ public:
         : identifier(identifier), expression(move(expression)) {}
     EvalResult Evaluate(SymbolTable& symbol_table) const override {
         EvalResult result = expression->Evaluate(symbol_table);
-        symbol_table.setVariable(identifier, result);
+        symbol_table.setVariable(identifier, result, true);
         return result;
     }
 private:
@@ -193,7 +197,7 @@ public:
     AssignmentNode(string identifier, NodePtr expression) : identifier(identifier), expression(move(expression)) {}
     EvalResult Evaluate(SymbolTable& symbol_table) const override {
         EvalResult result = expression->Evaluate(symbol_table);
-        symbol_table.setVariable(identifier, result);
+        symbol_table.setVariable(identifier, result, false);
         return result;
     }
 private:

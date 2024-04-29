@@ -12,7 +12,8 @@ private:
     unordered_map<string, EvalResult> variables;
 
 public:
-    void setVariable(const string& name, EvalResult value) {
+    void setVariable(const string& name, EvalResult value, bool declare = false) {
+        if (declare && variables.find(name) != variables.end()) { throw invalid_argument("Variable already declared: " + name); }
         variables[name] = value;
     }
 
