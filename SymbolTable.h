@@ -2,19 +2,23 @@
 #include <unordered_map>
 #include <string>
 #include <stdexcept>
+#include <variant>
 using namespace std;
+
+using EvalResult = variant<int, string, double, bool>;
 
 class SymbolTable {
 private:
-    unordered_map<string, int> variables;
+    unordered_map<string, EvalResult> variables;
 
 public:
-    void setVariable(const string& name, int value) {
+    void setVariable(const string& name, EvalResult value) {
         variables[name] = value;
     }
 
-    int getVariable(const string& name) {
-        if (variables.find(name) != variables.end()) { return variables.at(name); }
+    EvalResult getVariable(const string& name) {
+        auto it = variables.find(name);
+        if (it != variables.end()) { return it->second; }
         else { throw invalid_argument("Undefined variable: " + name); }
     }
 };

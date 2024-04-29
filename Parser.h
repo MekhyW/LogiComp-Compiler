@@ -23,6 +23,21 @@ public:
             current_token = tokenizer.selectNext(); 
             return make_shared<NoOpNode>(); 
         }
+        else if (current_token.type == "LOCAL") {
+            current_token = tokenizer.selectNext();
+            if (!isalpha(current_token.type[0])) { throw invalid_argument("Expected identifier after 'local'"); }
+            string var_name = current_token.type;
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> declaration_node = make_shared<VarDeclareNode>(var_name);
+            if (current_token.type == "ASSIGN") {
+                current_token = tokenizer.selectNext();
+                shared_ptr<Node> value_node = parse_boolexpression();
+                declaration_node = make_shared<VarDeclareNode>(var_name, value_node);
+            }
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after local declaration"); }
+            current_token = tokenizer.selectNext();
+            return declaration_node;
+        }
         else if (current_token.type == "PRINT") {
             current_token = tokenizer.selectNext();
             if (current_token.type != "LPAREN") { throw invalid_argument("Expected '(' after print keyword"); }
@@ -147,6 +162,11 @@ public:
             int value = current_token.value;
             current_token = tokenizer.selectNext();
             return make_shared<IntValNode>(value);
+        }
+        else if (current_token.type == "STRING") {
+            string value = current_token.valueString;
+            current_token = tokenizer.selectNext();
+            return make_shared<StringValNode>(value);
         }
         else if (current_token.type == "LPAREN") {
             current_token = tokenizer.selectNext();

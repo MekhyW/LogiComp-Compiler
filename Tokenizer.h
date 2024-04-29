@@ -9,6 +9,7 @@ class Token {
 public:
     string type;      
     int value;
+    string valueString;
 };
 
 class Tokenizer {
@@ -26,6 +27,7 @@ public:
         keywordMap["*"] = "MULT";
         keywordMap["/"] = "DIV";
         keywordMap["%"] = "MOD";
+        keywordMap[".."] = "CONCAT";
         keywordMap["("] = "LPAREN";
         keywordMap[")"] = "RPAREN";
         keywordMap["="] = "ASSIGN";
@@ -38,6 +40,7 @@ public:
         keywordMap["not"] = "NOT";
         keywordMap["and"] = "AND";
         keywordMap["or"] = "OR";
+        keywordMap["local"] = "LOCAL";
         keywordMap["if"] = "IF";
         keywordMap["else"] = "ELSE";
         keywordMap["then"] = "THEN";
@@ -73,16 +76,37 @@ public:
                 if (keywordMap.find(identifier) != keywordMap.end()) { next.type = keywordMap[identifier]; }
                 else { next.type = identifier; }
                 return;
+            } else if (current_char == '"') {
+                next.type = "STRING";
+                next.value = 0;
+                next.valueString = "";
+                position++;
+                while (position < source.size() && source[position] != '"') {
+                    if (source[position] == '\\' && position + 1 < source.size() && source[position + 1] == '"') {
+                        next.valueString += '"';
+                        position += 2;
+                    } else {
+                        next.valueString += source[position];
+                        position++;
+                    }
+                }
+                if (position >= source.size() || source[position] != '"') { throw invalid_argument("Unterminated string"); }
+                position++;
+                return;
             } else {
                 string identifier = "";
                 identifier += current_char;
                 position++;
+                if (current_char == '.' && position < source.size() && source[position] == '.') {
+                    identifier += source[position];
+                    position++;
+                }
                 while (position < source.size() && source[position] == '=') {
                     identifier += source[position];
                     position++;
                 }
                 if (keywordMap.find(identifier) != keywordMap.end()) { next.type = keywordMap[identifier]; }
-                else { throw invalid_argument("Invalid word: '" + identifier + "'"); }
+                else { throw invalid_argument("Invalid operator: '" + identifier + "'"); }
                 return;
             }
         }
