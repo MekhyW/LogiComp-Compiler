@@ -62,27 +62,39 @@ public:
                 return EvalResult(left_int % right_int);
             }
         }
-        else if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=" || op == "and" || op == "or") { 
-            bool left_bool;
-            bool right_bool;
+        else if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=") { 
+            int left_int;
+            int right_int;
+            if (holds_alternative<int>(left_value)) { left_int = get<int>(left_value); }
+            else if (holds_alternative<double>(left_value)) { left_int = get<double>(left_value); }
+            else if (holds_alternative<bool>(left_value)) { left_int = get<bool>(left_value); }
+            if (holds_alternative<int>(right_value)) { right_int = get<int>(right_value); }
+            else if (holds_alternative<double>(right_value)) { right_int = get<double>(right_value); }
+            else if (holds_alternative<bool>(right_value)) { right_int = get<bool>(right_value); }
             if (holds_alternative<string>(left_value) && holds_alternative<string>(right_value)) {
                 if (op == "==") { return EvalResult(get<string>(left_value) == get<string>(right_value)); }
                 else if (op == "!=") { return EvalResult(get<string>(left_value) != get<string>(right_value)); }
                 else { throw invalid_argument("Invalid operation on string type"); }
             }
+            if (op == "==") { return EvalResult(left_int == right_int); }
+            else if (op == "!=") { return EvalResult(left_int != right_int); }
+            else if (op == "<") { return EvalResult(left_int < right_int); }
+            else if (op == "<=") { return EvalResult(left_int <= right_int); }
+            else if (op == ">") { return EvalResult(left_int > right_int); }
+            else if (op == ">=") { return EvalResult(left_int >= right_int); }
+            else if (op == "and") { return EvalResult(left_int && right_int); }
+            else if (op == "or") { return EvalResult(left_int || right_int); }
+        }
+        else if (op == "and" || op == "or") {
+            bool left_bool;
+            bool right_bool;
             if (holds_alternative<int>(left_value)) { left_bool = get<int>(left_value) != 0; }
             else if (holds_alternative<double>(left_value)) { left_bool = get<double>(left_value) != 0; }
             else if (holds_alternative<bool>(left_value)) { left_bool = get<bool>(left_value); }
             if (holds_alternative<int>(right_value)) { right_bool = get<int>(right_value) != 0; }
             else if (holds_alternative<double>(right_value)) { right_bool = get<double>(right_value) != 0; }
             else if (holds_alternative<bool>(right_value)) { right_bool = get<bool>(right_value); }
-            if (op == "==") { return EvalResult(left_bool == right_bool); }
-            else if (op == "!=") { return EvalResult(left_bool != right_bool); }
-            else if (op == "<") { return EvalResult(left_bool < right_bool); }
-            else if (op == "<=") { return EvalResult(left_bool <= right_bool); }
-            else if (op == ">") { return EvalResult(left_bool > right_bool); }
-            else if (op == ">=") { return EvalResult(left_bool >= right_bool); }
-            else if (op == "and") { return EvalResult(left_bool && right_bool); }
+            if (op == "and") { return EvalResult(left_bool && right_bool); }
             else if (op == "or") { return EvalResult(left_bool || right_bool); }
         }
         else { throw invalid_argument("Invalid binary operation"); }
@@ -152,10 +164,10 @@ public:
     PrintNode(NodePtr expression) : expression(move(expression)) {}
     EvalResult Evaluate(SymbolTable& symbol_table) const override {
         EvalResult result = expression->Evaluate(symbol_table);
-        if (holds_alternative<int>(result)) { cout << get<int>(result); }
-        else if (holds_alternative<string>(result)) { cout << get<string>(result); }
-        else if (holds_alternative<double>(result)) { cout << get<double>(result); }
-        else if (holds_alternative<bool>(result)) { cout << get<bool>(result); }
+        if (holds_alternative<int>(result)) { cout << get<int>(result) << endl; }
+        else if (holds_alternative<string>(result)) { cout << get<string>(result) << endl; }
+        else if (holds_alternative<double>(result)) { cout << get<double>(result) << endl; }
+        else if (holds_alternative<bool>(result)) { cout << get<bool>(result) << endl; }
         return result;
     }
 private:
