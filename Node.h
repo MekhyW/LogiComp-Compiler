@@ -28,27 +28,62 @@ public:
         if (op != ".." && op != "==" && op != "!=" && (holds_alternative<string>(left_value) || holds_alternative<string>(right_value))) {
             throw invalid_argument("Unsupported operation on string type");
         }
-        if (op == "..") { return get<string>(left_value) + get<string>(right_value); }
-        else if (op == "+") { return get<int>(left_value) + get<int>(right_value); }
-        else if (op == "-") { return get<int>(left_value) - get<int>(right_value); }
-        else if (op == "*") { return get<int>(left_value) * get<int>(right_value); }
-        else if (op == "/") {
-            if (get<int>(right_value) == 0) { throw invalid_argument("Division by zero"); }
-            return get<int>(left_value) / get<int>(right_value);
+        if (op == "..") { 
+            string left_str;
+            string right_str;
+            if (holds_alternative<int>(left_value)) { left_str = to_string(get<int>(left_value)); }
+            else if (holds_alternative<double>(left_value)) { left_str = to_string(get<double>(left_value)); }
+            else if (holds_alternative<string>(left_value)) { left_str = get<string>(left_value); }
+            else if (holds_alternative<bool>(left_value)) { left_str = get<bool>(left_value) ? "true" : "false"; }
+            if (holds_alternative<int>(right_value)) { right_str = to_string(get<int>(right_value)); }
+            else if (holds_alternative<double>(right_value)) { right_str = to_string(get<double>(right_value)); }
+            else if (holds_alternative<string>(right_value)) { right_str = get<string>(right_value); }
+            else if (holds_alternative<bool>(right_value)) { right_str = get<bool>(right_value) ? "true" : "false"; }
+            return EvalResult(left_str + right_str);
         }
-        else if (op == "%") {
-            if (get<int>(right_value) == 0) { throw invalid_argument("Division by zero"); }
-            return get<int>(left_value) % get<int>(right_value);
+        else if (op == "+" || op == "-" || op == "*" || op == "/" || op == "%") {
+            int left_int;
+            int right_int;
+            if (holds_alternative<int>(left_value)) { left_int = get<int>(left_value); }
+            else if (holds_alternative<double>(left_value)) { left_int = get<double>(left_value); }
+            else if (holds_alternative<bool>(left_value)) { left_int = get<bool>(left_value); }
+            if (holds_alternative<int>(right_value)) { right_int = get<int>(right_value); }
+            else if (holds_alternative<double>(right_value)) { right_int = get<double>(right_value); }
+            else if (holds_alternative<bool>(right_value)) { right_int = get<bool>(right_value); }
+            if (op == "+") { return EvalResult(left_int + right_int); }
+            else if (op == "-") { return EvalResult(left_int - right_int); }
+            else if (op == "*") { return EvalResult(left_int * right_int); }
+            else if (op == "/") {
+                if (right_int == 0) { throw invalid_argument("Division by zero"); }
+                return EvalResult(left_int / right_int);
+            }
+            else if (op == "%") {
+                if (right_int == 0) { throw invalid_argument("Division by zero"); }
+                return EvalResult(left_int % right_int);
+            }
         }
-        else if (op == "==") { return get<int>(left_value) == get<int>(right_value); }
-        else if (op == "!=") { return get<int>(left_value) != get<int>(right_value); }
-        else if (op == "<") { return get<int>(left_value) < get<int>(right_value); }
-        else if (op == "<=") { return get<int>(left_value) <= get<int>(right_value); }
-        else if (op == ">") { return get<int>(left_value) > get<int>(right_value); }
-        else if (op == ">=") { return get<int>(left_value) >= get<int>(right_value); }
-        else if (op == "and") { return get<bool>(left_value) && get<bool>(right_value); }
-        else if (op == "or") { return get<bool>(left_value) || get<bool>(right_value); }
+        else if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=" || op == "and" || op == "or") { 
+            bool left_bool;
+            bool right_bool;
+            if (holds_alternative<int>(left_value)) { left_bool = get<int>(left_value) != 0; }
+            else if (holds_alternative<double>(left_value)) { left_bool = get<double>(left_value) != 0; }
+            else if (holds_alternative<bool>(left_value)) { left_bool = get<bool>(left_value); }
+            else if (holds_alternative<string>(left_value)) { left_bool = !get<string>(left_value).empty(); }
+            if (holds_alternative<int>(right_value)) { right_bool = get<int>(right_value) != 0; }
+            else if (holds_alternative<double>(right_value)) { right_bool = get<double>(right_value) != 0; }
+            else if (holds_alternative<bool>(right_value)) { right_bool = get<bool>(right_value); }
+            else if (holds_alternative<string>(right_value)) { right_bool = !get<string>(right_value).empty(); }
+            if (op == "==") { return EvalResult(left_bool == right_bool); }
+            else if (op == "!=") { return EvalResult(left_bool != right_bool); }
+            else if (op == "<") { return EvalResult(left_bool < right_bool); }
+            else if (op == "<=") { return EvalResult(left_bool <= right_bool); }
+            else if (op == ">") { return EvalResult(left_bool > right_bool); }
+            else if (op == ">=") { return EvalResult(left_bool >= right_bool); }
+            else if (op == "and") { return EvalResult(left_bool && right_bool); }
+            else if (op == "or") { return EvalResult(left_bool || right_bool); }
+        }
         else { throw invalid_argument("Invalid binary operation"); }
+        return EvalResult(0);
     }
 private:
     string op;
@@ -72,7 +107,7 @@ private:
 
 class NoOpNode : public Node {
 public:
-    EvalResult Evaluate(SymbolTable& symbol_table) const override { return 0; }
+    EvalResult Evaluate(SymbolTable& symbol_table) const override { return EvalResult(0); }
 };
 
 class IntValNode : public Node {
@@ -105,7 +140,7 @@ public:
     EvalResult Evaluate(SymbolTable& symbol_table) const override {
         int value;
         cin >> value;
-        return value;
+        return EvalResult(value);
     }
 };
 
@@ -143,7 +178,7 @@ public:
     AssignmentNode(string identifier, NodePtr expression) : identifier(identifier), expression(move(expression)) {}
     EvalResult Evaluate(SymbolTable& symbol_table) const override {
         EvalResult result = expression->Evaluate(symbol_table);
-        symbol_table.setVariable(identifier, get<int>(result));
+        symbol_table.setVariable(identifier, result);
         return result;
     }
 private:
