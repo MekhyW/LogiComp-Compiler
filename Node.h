@@ -15,16 +15,20 @@ using EvalResult = std::variant<int, string, double, bool>;
 class Node {
 public:
     vector<NodePtr> statements;
-    virtual EvalResult Evaluate(SymbolTable& symbolTable) const = 0;
+    static int i;
+    virtual EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const = 0;
     void add_statement(NodePtr statement) { statements.push_back(statement); }
+    static int newId() { return ++i; }
 };
+
+int Node::i = 0;
 
 class BinOpNode : public Node {
 public:
     BinOpNode(string op, NodePtr left, NodePtr right) : op(op), left(move(left)), right(move(right)) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
-        EvalResult left_value = left->Evaluate(symbol_table);
-        EvalResult right_value = right->Evaluate(symbol_table);
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
+        EvalResult left_value = left->Evaluate(symbol_table, assembly);
+        EvalResult right_value = right->Evaluate(symbol_table, assembly);
         if (op != ".." && (holds_alternative<string>(left_value) != holds_alternative<string>(right_value))) {
             throw invalid_argument("Unsupported operation on string type");
         }
@@ -112,8 +116,8 @@ private:
 class UnOpNode : public Node {
 public:
     UnOpNode(string op, NodePtr child) : op(op), child(move(child)) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
-        EvalResult child_value = child->Evaluate(symbol_table);
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
+        EvalResult child_value = child->Evaluate(symbol_table, assembly);
         if (op == "+") { return get<int>(child_value); }
         else if (op == "-") { return -get<int>(child_value); }
         else if (op == "not") { return !get<bool>(child_value); }
@@ -126,13 +130,13 @@ private:
 
 class NoOpNode : public Node {
 public:
-    EvalResult Evaluate(SymbolTable& symbol_table) const override { return EvalResult(0); }
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override { return EvalResult(0); }
 };
 
 class IntValNode : public Node {
 public:
     IntValNode(int val) : value(val) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override { return EvalResult(value); }
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override { return EvalResult(value); }
 private:
     int value;
 };
@@ -140,7 +144,7 @@ private:
 class StringValNode : public Node {
 public:
     StringValNode(string val) : value(val) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override { return EvalResult(value); }
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override { return EvalResult(value); }
 private:
     string value;
 };
@@ -148,7 +152,7 @@ private:
 class VarNode : public Node {
 public:
     VarNode(string identifier) : identifier(identifier) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override { return symbol_table.getVariable(identifier); }
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override { return symbol_table.getVariable(identifier); }
 private:
     string identifier;
 };
@@ -156,7 +160,7 @@ private:
 class ReadNode : public Node {
 public:
     ReadNode() = default;
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
         int value;
         cin >> value;
         return EvalResult(value);
@@ -166,8 +170,8 @@ public:
 class PrintNode : public Node {
 public:
     PrintNode(NodePtr expression) : expression(move(expression)) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
-        EvalResult result = expression->Evaluate(symbol_table);
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
+        EvalResult result = expression->Evaluate(symbol_table, assembly);
         if (holds_alternative<int>(result)) { cout << get<int>(result) << endl; }
         else if (holds_alternative<string>(result)) { cout << get<string>(result) << endl; }
         else if (holds_alternative<double>(result)) { cout << get<double>(result) << endl; }
@@ -182,8 +186,8 @@ class VarDeclareNode : public Node {
 public:
     VarDeclareNode(string identifier, NodePtr expression = make_shared<IntValNode>(0))
         : identifier(identifier), expression(move(expression)) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
-        EvalResult result = expression->Evaluate(symbol_table);
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
+        EvalResult result = expression->Evaluate(symbol_table, assembly);
         symbol_table.setVariable(identifier, result, true);
         return result;
     }
@@ -195,8 +199,8 @@ private:
 class AssignmentNode : public Node {
 public:
     AssignmentNode(string identifier, NodePtr expression) : identifier(identifier), expression(move(expression)) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
-        EvalResult result = expression->Evaluate(symbol_table);
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
+        EvalResult result = expression->Evaluate(symbol_table, assembly);
         symbol_table.setVariable(identifier, result, false);
         return result;
     }
@@ -208,9 +212,9 @@ private:
 class WhileNode : public Node {
 public:
     WhileNode(NodePtr condition, NodePtr block) : condition(move(condition)), block(move(block)) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
         EvalResult result = 0;
-        while (get<bool>(condition->Evaluate(symbol_table))) { result = block->Evaluate(symbol_table); }
+        while (get<bool>(condition->Evaluate(symbol_table, assembly))) { result = block->Evaluate(symbol_table, assembly); }
         return result;
     }
 private:
@@ -220,10 +224,10 @@ private:
 class IfNode : public Node {
 public:
     IfNode(NodePtr condition, NodePtr block, NodePtr else_block) : condition(move(condition)), block(move(block)), else_block(move(else_block)) {}
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
-        EvalResult result = condition->Evaluate(symbol_table);
-        if (get<bool>(result)) { return block->Evaluate(symbol_table); }
-        else { return else_block->Evaluate(symbol_table); }
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
+        EvalResult result = condition->Evaluate(symbol_table, assembly);
+        if (get<bool>(result)) { return block->Evaluate(symbol_table, assembly); }
+        else { return else_block->Evaluate(symbol_table, assembly); }
     }
 private:
     NodePtr condition, block, else_block;
@@ -231,9 +235,9 @@ private:
 
 class BlockNode : public Node {
 public:
-    EvalResult Evaluate(SymbolTable& symbol_table) const override {
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
         EvalResult result = 0;
-        for (const auto& statement : statements) { result = statement->Evaluate(symbol_table); }
+        for (const auto& statement : statements) { result = statement->Evaluate(symbol_table, assembly); }
         return result;
     }
 };
