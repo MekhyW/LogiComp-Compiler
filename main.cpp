@@ -37,11 +37,11 @@ int main(int argc, char *argv[]) {
 
     // Compile
     string asmcode = "";
-    asmcode = assembly.add_file(asmcode, "Assembly/header.asm");
+    assembly.add_file("Assembly/header.asm");
     root->Evaluate(table, assembly);
-    asmcode = assembly.add_file(asmcode, "Assembly/footer.asm");
-    asmcode = assembly.check_windows(asmcode);
-    assembly.write_to_file(asmcode, filename.substr(0, filename.size() - 4) + ".asm");
+    assembly.add_file("Assembly/footer.asm");
+    assembly.check_windows();
+    assembly.write_to_file(filename.substr(0, filename.size() - 4) + ".asm");
 
     return 0;
 }

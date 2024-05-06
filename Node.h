@@ -16,9 +16,11 @@ class Node {
 public:
     vector<NodePtr> statements;
     static int i;
+    int id;
+    static int newId() { return ++i; }
+    Node() : id(newId()) {}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const = 0;
     void add_statement(NodePtr statement) { statements.push_back(statement); }
-    static int newId() { return ++i; }
 };
 
 int Node::i = 0;
@@ -27,8 +29,10 @@ class BinOpNode : public Node {
 public:
     BinOpNode(string op, NodePtr left, NodePtr right) : op(op), left(move(left)), right(move(right)) {}
     EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
-        EvalResult left_value = left->Evaluate(symbol_table, assembly);
         EvalResult right_value = right->Evaluate(symbol_table, assembly);
+        assembly.add_instruction("PUSH EAX");
+        EvalResult left_value = left->Evaluate(symbol_table, assembly);
+        assembly.add_instruction("POP EBX");
         if (op != ".." && (holds_alternative<string>(left_value) != holds_alternative<string>(right_value))) {
             throw invalid_argument("Unsupported operation on string type");
         }
@@ -54,15 +58,27 @@ public:
             if (holds_alternative<int>(right_value)) { right_int = get<int>(right_value); }
             else if (holds_alternative<double>(right_value)) { right_int = get<double>(right_value); }
             else if (holds_alternative<bool>(right_value)) { right_int = get<bool>(right_value); }
-            if (op == "+") { return EvalResult(left_int + right_int); }
-            else if (op == "-") { return EvalResult(left_int - right_int); }
-            else if (op == "*") { return EvalResult(left_int * right_int); }
+            if (op == "+") { 
+                assembly.add_instruction("ADD EAX, EBX");
+                return EvalResult(left_int + right_int); 
+            }
+            else if (op == "-") { 
+                assembly.add_instruction("SUB EAX, EBX");
+                return EvalResult(left_int - right_int); 
+            }
+            else if (op == "*") {
+                assembly.add_instruction("IMUL EBX"); 
+                return EvalResult(left_int * right_int); 
+            }
             else if (op == "/") {
                 if (right_int == 0) { throw invalid_argument("Division by zero"); }
+                assembly.add_instruction("IDIV EBX");
                 return EvalResult(left_int / right_int);
             }
             else if (op == "%") {
                 if (right_int == 0) { throw invalid_argument("Division by zero"); }
+                assembly.add_instruction("IDIV EBX");
+                assembly.add_instruction("MOV EAX, EDX");
                 return EvalResult(left_int % right_int);
             }
         }
@@ -136,7 +152,10 @@ public:
 class IntValNode : public Node {
 public:
     IntValNode(int val) : value(val) {}
-    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override { return EvalResult(value); }
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override {
+        assembly.add_instruction("MOV EAX, " + to_string(value));
+        return EvalResult(value);
+    }
 private:
     int value;
 };
@@ -144,7 +163,10 @@ private:
 class StringValNode : public Node {
 public:
     StringValNode(string val) : value(val) {}
-    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override { return EvalResult(value); }
+    EvalResult Evaluate(SymbolTable& symbol_table, Assembly& assembly) const override { 
+        assembly.add_instruction("MOV EAX, " + value);
+        return EvalResult(value);
+    }
 private:
     string value;
 };

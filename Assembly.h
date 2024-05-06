@@ -3,26 +3,26 @@
 using namespace std;
 
 class Assembly {
+private:
+    string asmcode;
+
 public:
-    static string add_instruction(string asmcode, string instruction) {
+    void add_instruction(string instruction) {
         asmcode += instruction + "\n";
-        return asmcode;
     }
 
-    static string add_label(string asmcode, string label) {
+    void add_label(string label) {
         asmcode += label + ":\n";
-        return asmcode;
     }
 
-    static string add_file(string asmcode, string filename) {
+    void add_file(string filename) {
         ifstream file(filename);
         string line;
         while (getline(file, line)) { asmcode += line + "\n"; }
         file.close();
-        return asmcode;
     }
 
-    static string check_windows(string asmcode) {
+    void check_windows() {
         #ifdef _WIN32
             string keywords[] = {"main", "scanf", "printf", "fflush", "stdout", "stdin"};
             string replacements[] = {"_main", "_scanf", "_printf", "_fflush", "_stdout", "_stdin"};
@@ -43,12 +43,19 @@ public:
                 }
             }
         #endif
-        return asmcode;
     }
 
-    static void write_to_file(string asmcode, string filename) {
+    void write_to_file(string filename) {
         ofstream file(filename);
         file << asmcode;
         file.close();
+    }
+
+    void clear_asmcode() {
+        asmcode.clear();
+    }
+
+    string get_asmcode() const {
+        return asmcode;
     }
 };
