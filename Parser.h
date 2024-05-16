@@ -83,16 +83,71 @@ public:
             current_token = tokenizer.selectNext();
             return make_shared<IfNode>(condition, block_node, else_block_node);
         }
-        else { 
+        else if (current_token.type == "FUNCTION") {
+            current_token = tokenizer.selectNext();
+            if (!isalpha(current_token.type[0])) { throw invalid_argument("Expected identifier after 'function'"); }
+            for (auto const& x : tokenizer.keywordMap) {
+                if (current_token.type == x.first || current_token.type == x.second) { throw invalid_argument("Cannot use keyword as function name: " + current_token.type); }
+            }
+            string func_name = current_token.type;
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "LPAREN") { throw invalid_argument("Expected '(' after function name"); }
+            current_token = tokenizer.selectNext();
+            vector<string> args;
+            while (current_token.type != "RPAREN") {
+                if (!isalpha(current_token.type[0])) { throw invalid_argument("Expected identifier in function arguments"); }
+                for (auto const& x : tokenizer.keywordMap) {
+                    if (current_token.type == x.first || current_token.type == x.second) { throw invalid_argument("Cannot use keyword as variable name: " + current_token.type); }
+                }
+                args.push_back(current_token.type);
+                current_token = tokenizer.selectNext();
+                if (current_token.type == "RPAREN") { break; }
+                if (current_token.type != "COMMA") { throw invalid_argument("Expected ',' after function argument"); }
+                current_token = tokenizer.selectNext();
+            }
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after function declaration"); }
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> block_node = parse_block();
+            if (current_token.type != "END") { throw invalid_argument("Expected 'end' after function block"); }
+            current_token = tokenizer.selectNext();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after function block"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<FuncDeclareNode>(func_name, args, block_node);
+        }
+        else if (current_token.type == "RETURN") {
+            current_token = tokenizer.selectNext();
+            shared_ptr<Node> return_node = parse_boolexpression();
+            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after return statement"); }
+            current_token = tokenizer.selectNext();
+            return make_shared<ReturnNode>(return_node);
+        }
+        else {
             string identifier = current_token.type;
             if (identifier == "NUMBER") { throw invalid_argument("Cannot assign to number"); }
             current_token = tokenizer.selectNext();
-            if (current_token.type != "ASSIGN") { throw invalid_argument("Expected '=' after identifier"); }
-            current_token = tokenizer.selectNext();
-            shared_ptr<Node> bolexp_node = parse_boolexpression();
-            if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after assignment"); }
-            current_token = tokenizer.selectNext();
-            return make_shared<AssignmentNode>(identifier, bolexp_node);
+            if (current_token.type != "ASSIGN" && current_token.type != "LPAREN") { throw invalid_argument("Expected '=' or '(' after identifier"); }
+            if (current_token.type == "ASSIGN") {
+                current_token = tokenizer.selectNext();
+                shared_ptr<Node> bolexp_node = parse_boolexpression();
+                if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after assignment"); }
+                current_token = tokenizer.selectNext();
+                return make_shared<AssignmentNode>(identifier, bolexp_node);
+            }
+            else {
+                current_token = tokenizer.selectNext();
+                vector<shared_ptr<Node>> args;
+                while (current_token.type != "RPAREN") {
+                    args.push_back(parse_boolexpression());
+                    if (current_token.type == "RPAREN") { break; }
+                    if (current_token.type != "COMMA") { throw invalid_argument("Expected ',' after function argument"); }
+                    current_token = tokenizer.selectNext();
+                }
+                current_token = tokenizer.selectNext();
+                if (current_token.type != "NEWLINE") { throw invalid_argument("Expected newline after function call"); }
+                current_token = tokenizer.selectNext();
+                return make_shared<FuncCallNode>(identifier, args);
+            }
         }
     }
 
@@ -202,6 +257,18 @@ public:
         else {
             string identifier = current_token.type;
             current_token = tokenizer.selectNext();
+            if (current_token.type == "LPAREN") {
+                current_token = tokenizer.selectNext();
+                vector<shared_ptr<Node>> args;
+                while (current_token.type != "RPAREN") {
+                    args.push_back(parse_boolexpression());
+                    if (current_token.type == "RPAREN") { break; }
+                    if (current_token.type != "COMMA") { throw invalid_argument("Expected ',' after function argument"); }
+                    current_token = tokenizer.selectNext();
+                }
+                current_token = tokenizer.selectNext();
+                return make_shared<FuncCallNode>(identifier, args);
+            }
             return make_shared<VarNode>(identifier);
         }
     }

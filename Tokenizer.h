@@ -30,6 +30,7 @@ public:
         keywordMap[".."] = "CONCAT";
         keywordMap["("] = "LPAREN";
         keywordMap[")"] = "RPAREN";
+        keywordMap[","] = "COMMA";
         keywordMap["="] = "ASSIGN";
         keywordMap["=="] = "EQ";
         keywordMap["~="] = "NEQ";
@@ -49,6 +50,8 @@ public:
         keywordMap["end"] = "END";
         keywordMap["read"] = "READ";
         keywordMap["print"] = "PRINT";
+        keywordMap["return"] = "RETURN";
+        keywordMap["function"] = "FUNCTION";
     }
 
     void updateNextToken() {

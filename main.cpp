@@ -10,6 +10,7 @@ Tokenizer Parser::tokenizer = Tokenizer("");
 Token Parser::current_token;
 Parser parser;
 SymbolTable table;
+FuncTable func_table;
 Assembly assembly;
 
 int main(int argc, char *argv[]) {
@@ -38,7 +39,7 @@ int main(int argc, char *argv[]) {
     // Compile
     string asmcode = "";
     assembly.add_file("Assembly/header.asm");
-    root->Evaluate(table, assembly);
+    root->Evaluate(table, func_table, assembly);
     assembly.add_file("Assembly/footer.asm");
     assembly.check_windows();
     assembly.write_to_file(filename.substr(0, filename.size() - 4) + ".asm");
