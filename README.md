@@ -1,5 +1,7 @@
 # LogiComp-Compiler
 
+Custom simplified Lua compiler that generates assembly code for Linux and Windows, developed from scratch in C++.
+
 ## Syntactic diagram 
 ![Syntactic diagram](Diagram.jpg)
 
@@ -18,7 +20,7 @@
 <li>BOOL_EXP = BOOL_TERM, { ("or"), BOOL_TERM } ;
 <li>BOOL_TERM = REL_EXP, { ("and"), REL_EXP } ;
 <li>EXPRESSION = TERM, { ("+" | "-" |".."), TERM } ;
-<li>TERM = FACTOR, { ("*" | "/"), FACTOR } ;
+<li>TERM = FACTOR, { ("*" | "/" | "%"), FACTOR } ;
 <li>FACTOR = NUMBER 
     | STRING 
     | IDENTIFIER, ( | "(" , ( | BOOL_EXP, { ( "," ) , BOOL_EXP } ), ")" ) 

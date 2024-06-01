@@ -5,7 +5,14 @@
 #include <variant>
 using namespace std;
 
+class Node;
+using NodePtr = shared_ptr<Node>;
 using EvalResult = std::variant<int, string, double, bool>;
+
+struct FuncInfo {
+    vector<string> args;
+    NodePtr block;
+};
 
 class SymbolTable {
 private:
@@ -25,16 +32,15 @@ public:
 
 class FuncTable {
 private:
-    static unordered_map<string, shared_ptr<Node>> functions;
+    unordered_map<string, FuncInfo> functions;
 public:
-    static void setFunction(const string& name, shared_ptr<Node> value, bool declare = false) {
-        if (declare && functions.find(name) != functions.end()) { throw invalid_argument("Function already declared: " + name); }
-        else if (!declare && functions.find(name) == functions.end()) { throw invalid_argument("Undefined function: " + name); }
-        functions[name] = value;
+    void setFunction(const string& name, const vector<string>& args, const NodePtr& block) {
+        if (functions.find(name) != functions.end()) { throw invalid_argument("Function already declared: " + name); }
+        functions[name] = {args, block};
     }
-    static shared_ptr<Node> getFunction(const string& name) {
+    FuncInfo getFunction(const string& name) {
         auto it = functions.find(name);
-        if (it != functions.end()) { return it->second; }
+        if (it != functions.end()) { return it->second; } 
         else { throw invalid_argument("Undefined function: " + name); }
     }
 };

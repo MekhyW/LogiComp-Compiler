@@ -241,36 +241,41 @@ private:
 
 class FuncDeclareNode : public Node {
 public:
-    FuncDeclareNode(const string& func_name, const vector<string>& args, shared_ptr<Node> block_node)
+    FuncDeclareNode(const string& func_name, const vector<string>& args, NodePtr block_node)
         : func_name(func_name), args(args), block_node(move(block_node)) {}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
-        // Evaluate of the declarenode
+        func_table.setFunction(func_name, args, block_node);
+        return 0;
     }
 private:
     string func_name;
     vector<string> args;
-    shared_ptr<Node> block_node;
+    NodePtr block_node;
 };
 
 class FuncCallNode : public Node {
 public:
-    FuncCallNode(const string& identifier, const vector<shared_ptr<Node>>& args) : identifier(identifier), args(args) {}
+    FuncCallNode(const string& identifier, const vector<NodePtr>& args) : identifier(identifier), args(args) {}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
-        // Evaluate of the callnode
+        FuncInfo func_info = func_table.getFunction(identifier);
+        if (func_info.args.size() != args.size()) { throw invalid_argument("Function " + identifier + " expects " + to_string(func_info.args.size()) + " arguments, but " + to_string(args.size()) + " were given"); }
+        SymbolTable new_symbol_table = SymbolTable();
+        for (int i = 0; i < func_info.args.size(); i++) { new_symbol_table.setVariable(func_info.args[i], args[i]->Evaluate(symbol_table, func_table, assembly), true); }
+        return func_info.block->Evaluate(new_symbol_table, func_table, assembly);
     }
 private:
     string identifier;
-    vector<shared_ptr<Node>> args;
+    vector<NodePtr> args;
 };
 
 class ReturnNode : public Node {
 public:
-    ReturnNode(shared_ptr<Node> return_node) : return_node(move(return_node)) {}
+    ReturnNode(NodePtr return_node) : return_node(move(return_node)) {}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         return return_node->Evaluate(symbol_table, func_table, assembly);
     }
 private:
-    shared_ptr<Node> return_node;
+    NodePtr return_node;
 };
 
 class BlockNode : public Node {
