@@ -15,6 +15,7 @@ using EvalResult = std::variant<int, string, double, bool>;
 class Node {
 public:
     vector<NodePtr> statements;
+    string type;
     static int i;
     int id;
     static int newId() { return ++i; }
@@ -27,7 +28,7 @@ int Node::i = 0;
 
 class BinOpNode : public Node {
 public:
-    BinOpNode(string op, NodePtr left, NodePtr right) : op(op), left(move(left)), right(move(right)) {}
+    BinOpNode(string op, NodePtr left, NodePtr right) : op(op), left(move(left)), right(move(right)) {type = "BinOpNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult right_value = right->Evaluate(symbol_table, func_table, assembly);
         EvalResult left_value = left->Evaluate(symbol_table, func_table, assembly);
@@ -117,7 +118,7 @@ private:
 
 class UnOpNode : public Node {
 public:
-    UnOpNode(string op, NodePtr child) : op(op), child(move(child)) {}
+    UnOpNode(string op, NodePtr child) : op(op), child(move(child)) {type = "UnOpNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult child_value = child->Evaluate(symbol_table, func_table, assembly);
         if (op == "+") { return get<int>(child_value); }
@@ -132,12 +133,15 @@ private:
 
 class NoOpNode : public Node {
 public:
-    EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { return EvalResult(0); }
+    NoOpNode() {type = "NoOpNode";}
+    EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { 
+        return EvalResult("NULL"); 
+    }
 };
 
 class IntValNode : public Node {
 public:
-    IntValNode(int val) : value(val) {}
+    IntValNode(int val) : value(val) {type = "IntValNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         return EvalResult(value);
     }
@@ -147,7 +151,7 @@ private:
 
 class StringValNode : public Node {
 public:
-    StringValNode(string val) : value(val) {}
+    StringValNode(string val) : value(val) {type = "StringValNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { 
         return EvalResult(value);
     }
@@ -157,15 +161,17 @@ private:
 
 class VarNode : public Node {
 public:
-    VarNode(string identifier) : identifier(identifier) {}
-    EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { return symbol_table.getVariable(identifier); }
+    VarNode(string identifier) : identifier(identifier) {type = "VarNode";}
+    EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { 
+        return symbol_table.getVariable(identifier); 
+    }
 private:
     string identifier;
 };
 
 class ReadNode : public Node {
 public:
-    ReadNode() = default;
+    ReadNode() {type = "ReadNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         int value;
         cin >> value;
@@ -175,7 +181,7 @@ public:
 
 class PrintNode : public Node {
 public:
-    PrintNode(NodePtr expression) : expression(move(expression)) {}
+    PrintNode(NodePtr expression) : expression(move(expression)) {type = "PrintNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult result = expression->Evaluate(symbol_table, func_table, assembly);
         if (holds_alternative<int>(result)) { cout << get<int>(result) << endl; }
@@ -191,9 +197,10 @@ private:
 class VarDeclareNode : public Node {
 public:
     VarDeclareNode(string identifier, NodePtr expression = make_shared<IntValNode>(0))
-        : identifier(identifier), expression(move(expression)) {}
+        : identifier(identifier), expression(move(expression)) {type = "VarDeclareNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult result = expression->Evaluate(symbol_table, func_table, assembly);
+        if (result == EvalResult("NULL")) { throw invalid_argument("Cannot assign NULL value to variable " + identifier); }
         symbol_table.setVariable(identifier, result, true);
         return result;
     }
@@ -204,9 +211,10 @@ private:
 
 class AssignmentNode : public Node {
 public:
-    AssignmentNode(string identifier, NodePtr expression) : identifier(identifier), expression(move(expression)) {}
+    AssignmentNode(string identifier, NodePtr expression) : identifier(identifier), expression(move(expression)) {type = "AssignmentNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult result = expression->Evaluate(symbol_table, func_table, assembly);
+        if (result == EvalResult("NULL")) { throw invalid_argument("Cannot assign NULL value to variable " + identifier); }
         symbol_table.setVariable(identifier, result, false);
         return result;
     }
@@ -217,11 +225,10 @@ private:
 
 class WhileNode : public Node {
 public:
-    WhileNode(NodePtr condition, NodePtr block) : condition(move(condition)), block(move(block)) {}
+    WhileNode(NodePtr condition, NodePtr block) : condition(move(condition)), block(move(block)) {type = "WhileNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
-        EvalResult result = 0;
-        while (get<bool>(condition->Evaluate(symbol_table, func_table, assembly))) { result = block->Evaluate(symbol_table, func_table, assembly); }
-        return result;
+        while (get<bool>(condition->Evaluate(symbol_table, func_table, assembly))) { block->Evaluate(symbol_table, func_table, assembly); }
+        return EvalResult("NULL");
     }
 private:
     NodePtr condition, block;
@@ -229,7 +236,7 @@ private:
 
 class IfNode : public Node {
 public:
-    IfNode(NodePtr condition, NodePtr block, NodePtr else_block) : condition(move(condition)), block(move(block)), else_block(move(else_block)) {}
+    IfNode(NodePtr condition, NodePtr block, NodePtr else_block) : condition(move(condition)), block(move(block)), else_block(move(else_block)) {type = "IfNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult result = condition->Evaluate(symbol_table, func_table, assembly);
         if (get<bool>(result)) { return block->Evaluate(symbol_table, func_table, assembly); }
@@ -242,10 +249,10 @@ private:
 class FuncDeclareNode : public Node {
 public:
     FuncDeclareNode(const string& func_name, const vector<string>& args, NodePtr block_node)
-        : func_name(func_name), args(args), block_node(move(block_node)) {}
+        : func_name(func_name), args(args), block_node(move(block_node)) {type = "FuncDeclareNode";}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         func_table.setFunction(func_name, args, block_node);
-        return 0;
+        return EvalResult("NULL");
     }
 private:
     string func_name;
@@ -255,7 +262,7 @@ private:
 
 class FuncCallNode : public Node {
 public:
-    FuncCallNode(const string& identifier, const vector<NodePtr>& args) : identifier(identifier), args(args) {}
+    FuncCallNode(const string& identifier, const vector<NodePtr>& args) : identifier(identifier), args(args) {type = "FuncCallNode";}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         FuncInfo func_info = func_table.getFunction(identifier);
         if (func_info.args.size() != args.size()) { throw invalid_argument("Function " + identifier + " expects " + to_string(func_info.args.size()) + " arguments, but " + to_string(args.size()) + " were given"); }
@@ -270,7 +277,7 @@ private:
 
 class ReturnNode : public Node {
 public:
-    ReturnNode(NodePtr return_node) : return_node(move(return_node)) {}
+    ReturnNode(NodePtr return_node) : return_node(move(return_node)) {type = "ReturnNode";}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         return return_node->Evaluate(symbol_table, func_table, assembly);
     }
@@ -280,10 +287,12 @@ private:
 
 class BlockNode : public Node {
 public:
+    BlockNode() {type = "BlockNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
-        EvalResult result = 0;
-        if (statements.size() == 0) { return nullptr; }
-        for (const auto& statement : statements) { result = statement->Evaluate(symbol_table, func_table, assembly); }
-        return result;
+        for (const auto& statement : statements) {
+            if (statement->type == "ReturnNode") { return statement->Evaluate(symbol_table, func_table, assembly); }
+            else { statement->Evaluate(symbol_table, func_table, assembly); }
+        }
+        return EvalResult("NULL");
     }
 };
