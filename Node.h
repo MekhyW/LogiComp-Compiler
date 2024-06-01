@@ -282,6 +282,7 @@ class BlockNode : public Node {
 public:
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult result = 0;
+        if (statements.size() == 0) { return nullptr; }
         for (const auto& statement : statements) { result = statement->Evaluate(symbol_table, func_table, assembly); }
         return result;
     }

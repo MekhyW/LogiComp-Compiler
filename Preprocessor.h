@@ -27,7 +27,17 @@ public:
         return input;
     }
 
+    static string remove_empty_lines(const string& input) {
+        string filtered;
+        for (size_t i = 0; i < input.size(); ++i) {
+            if (input[i] != '\n' || (i + 1 < input.size() && input[i + 1] != '\n')) {
+                filtered += input[i];
+            }
+        }
+        return filtered;
+    }
+
     static string preprocess(const string& input) {
-        return add_newline_eof(remove_comments(input));
+        return add_newline_eof(remove_comments(remove_empty_lines(input)));
     }
 };
