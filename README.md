@@ -42,8 +42,8 @@ g++ -Wall -O3 -w main.cpp -o main -std=c++17
 Run the compiler:
 ```bash
 ./main program.lua
-nasm -f elf -o program program.o # For Linux
-nasm -f win32 -o program program.o # For Windows
+nasm -f elf -o program.o program.asm # For Linux
+nasm -f win32 -o program.o program.asm # For Windows
 gcc -m32 -o program program.o
 ./program
 ```
