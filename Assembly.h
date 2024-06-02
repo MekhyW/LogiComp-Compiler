@@ -4,7 +4,7 @@ using namespace std;
 
 class Assembly {
 private:
-    string asmcode;
+    string asmcode = "";
 
 public:
     void add_instruction(string instruction) {

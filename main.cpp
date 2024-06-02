@@ -37,7 +37,6 @@ int main(int argc, char *argv[]) {
     shared_ptr<Node> root = parser.run(filtered_code);
 
     // Compile
-    string asmcode = "";
     assembly.add_file("Assembly/header.asm");
     root->Evaluate(table, func_table, assembly);
     assembly.add_file("Assembly/footer.asm");
