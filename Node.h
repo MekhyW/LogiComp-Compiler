@@ -288,18 +288,13 @@ public:
         : condition(move(condition)), block(move(block)) { type = "WhileNode"; }
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         int label_id = this->id;
-        string start_label = "WHILE_START_" + to_string(label_id);
-        string end_label = "WHILE_END_" + to_string(label_id);
+        string start_label = "LOOP_" + to_string(label_id);
+        string end_label = "EXIT_" + to_string(label_id);
         assembly.add_label(start_label);
-        EvalResult cond_result = condition->Evaluate(symbol_table, func_table, assembly);
-        assembly.add_instruction("CMP EAX, 0");
+        condition->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("CMP EAX, False");
         assembly.add_instruction("JE " + end_label);
-        while (get<bool>(condition->Evaluate(symbol_table, func_table, assembly))) {
-            block->Evaluate(symbol_table, func_table, assembly);
-            condition->Evaluate(symbol_table, func_table, assembly);
-            assembly.add_instruction("CMP EAX, 0");
-            assembly.add_instruction("JE " + end_label);
-        }
+        block->Evaluate(symbol_table, func_table, assembly);
         assembly.add_instruction("JMP " + start_label);
         assembly.add_label(end_label);
         return EvalResult("NULL");
@@ -314,20 +309,17 @@ public:
         : condition(move(condition)), block(move(block)), else_block(move(else_block)) { type = "IfNode"; }
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         int label_id = this->id;
-        string true_label = "IF_TRUE_" + to_string(label_id);
-        string false_label = "IF_FALSE_" + to_string(label_id);
-        string end_label = "IF_END_" + to_string(label_id);
-        EvalResult cond_result = condition->Evaluate(symbol_table, func_table, assembly);
-        assembly.add_instruction("CMP EAX, 0");
+        string true_label = "IF_" + to_string(label_id);
+        string false_label = "ELSE_" + to_string(label_id);
+        string end_label = "EXIT_" + to_string(label_id);
+        assembly.add_label(true_label);
+        condition->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("CMP EAX, False");
         assembly.add_instruction("JE " + false_label);
-        if (get<bool>(cond_result)) {
-            assembly.add_label(true_label);
-            block->Evaluate(symbol_table, func_table, assembly);
-            assembly.add_instruction("JMP " + end_label);
-        } else {
-            assembly.add_label(false_label);
-            if (else_block) { else_block->Evaluate(symbol_table, func_table, assembly); }
-        }
+        block->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("JMP " + end_label);
+        assembly.add_label(false_label);
+        else_block->Evaluate(symbol_table, func_table, assembly);
         assembly.add_label(end_label);
         return EvalResult("NULL");
     }

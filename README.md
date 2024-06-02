@@ -1,7 +1,6 @@
 # LogiComp-Compiler
 
 Custom, simplified Lua compiler that generates assembly code for Linux and Windows x86, developed from scratch in C++.
-It also interprets Lua code directly.
 
 WARNING: This was made for educational purposes only. It is not intended to be used in production as it is not optimized and has many limitations compared to the original Lua compiler.
 
@@ -41,7 +40,7 @@ Compile the compiler using g++:
 ```bash
 g++ -Wall -O3 -w main.cpp -o main -std=c++17
 ```
-Run the compiler (it will also interpret):
+Run the compiler:
 ```bash
 ./main program.lua
 nasm -f elf -o program.o program.asm # For Linux
