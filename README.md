@@ -3,6 +3,8 @@
 Custom, simplified Lua compiler that generates assembly code for Linux and Windows x86, developed from scratch in C++.
 It also interprets Lua code directly.
 
+WARNING: This was made for educational purposes only. It is not intended to be used in production as it is not optimized and has many limitations compared to the original Lua compiler.
+
 ## Syntactic diagram 
 ![Syntactic diagram](Diagram.jpg)
 

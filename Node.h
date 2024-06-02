@@ -31,7 +31,9 @@ public:
     BinOpNode(string op, NodePtr left, NodePtr right) : op(op), left(move(left)), right(move(right)) {type = "BinOpNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult right_value = right->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("PUSH EAX");
         EvalResult left_value = left->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("POP EBX");
         if (op != ".." && (holds_alternative<string>(left_value) != holds_alternative<string>(right_value))) {
             throw invalid_argument("Unsupported operation on string type");
         }
@@ -57,19 +59,32 @@ public:
             if (holds_alternative<int>(right_value)) { right_int = get<int>(right_value); }
             else if (holds_alternative<double>(right_value)) { right_int = get<double>(right_value); }
             else if (holds_alternative<bool>(right_value)) { right_int = get<bool>(right_value); }
-            if (op == "+") { return EvalResult(left_int + right_int); }
-            else if (op == "-") { return EvalResult(left_int - right_int); }
-            else if (op == "*") { return EvalResult(left_int * right_int); }
+            if (op == "+") { 
+                assembly.add_instruction("ADD EAX, EBX");
+                return EvalResult(left_int + right_int); 
+            }
+            else if (op == "-") { 
+                assembly.add_instruction("SUB EAX, EBX");
+                return EvalResult(left_int - right_int); 
+            }
+            else if (op == "*") { 
+                assembly.add_instruction("IMUL EAX, EBX");
+                return EvalResult(left_int * right_int); 
+            }
             else if (op == "/") {
                 if (right_int == 0) { throw invalid_argument("Division by zero"); }
+                assembly.add_instruction("IDIV EAX, EBX");
                 return EvalResult(left_int / right_int);
             }
             else if (op == "%") {
                 if (right_int == 0) { throw invalid_argument("Division by zero"); }
+                assembly.add_instruction("IDIV EAX, EBX");
+                assembly.add_instruction("MOV EAX, EBX");
                 return EvalResult(left_int % right_int);
             }
         }
         else if (op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=") { 
+            assembly.add_instruction("CMP EAX, EBX");
             int left_int;
             int right_int;
             if (holds_alternative<int>(left_value)) { left_int = get<int>(left_value); }
@@ -87,14 +102,30 @@ public:
                 else if (op == ">=") { return EvalResult(get<string>(left_value) >= get<string>(right_value)); }
                 else { throw invalid_argument("Invalid operation on string type"); }
             }
-            if (op == "==") { return EvalResult(left_int == right_int); }
-            else if (op == "!=") { return EvalResult(left_int != right_int); }
-            else if (op == "<") { return EvalResult(left_int < right_int); }
-            else if (op == "<=") { return EvalResult(left_int <= right_int); }
-            else if (op == ">") { return EvalResult(left_int > right_int); }
-            else if (op == ">=") { return EvalResult(left_int >= right_int); }
-            else if (op == "and") { return EvalResult(left_int && right_int); }
-            else if (op == "or") { return EvalResult(left_int || right_int); }
+            if (op == "==") { 
+                assembly.add_instruction("CALL binop_je");
+                return EvalResult(left_int == right_int); 
+            }
+            else if (op == "!=") { 
+                assembly.add_instruction("CALL binop_jne");
+                return EvalResult(left_int != right_int); 
+            }
+            else if (op == "<") { 
+                assembly.add_instruction("CALL binop_jl");
+                return EvalResult(left_int < right_int); 
+            }
+            else if (op == "<=") { 
+                assembly.add_instruction("CALL binop_jle");
+                return EvalResult(left_int <= right_int); 
+            }
+            else if (op == ">") { 
+                assembly.add_instruction("CALL binop_jg");
+                return EvalResult(left_int > right_int); 
+            }
+            else if (op == ">=") { 
+                assembly.add_instruction("CALL binop_jge");
+                return EvalResult(left_int >= right_int); 
+            }
         }
         else if (op == "and" || op == "or") {
             bool left_bool;
@@ -105,8 +136,14 @@ public:
             if (holds_alternative<int>(right_value)) { right_bool = get<int>(right_value) != 0; }
             else if (holds_alternative<double>(right_value)) { right_bool = get<double>(right_value) != 0; }
             else if (holds_alternative<bool>(right_value)) { right_bool = get<bool>(right_value); }
-            if (op == "and") { return EvalResult(left_bool && right_bool); }
-            else if (op == "or") { return EvalResult(left_bool || right_bool); }
+            if (op == "and") { 
+                assembly.add_instruction("AND EAX, EBX");
+                return EvalResult(left_bool && right_bool); 
+            }
+            else if (op == "or") { 
+                assembly.add_instruction("OR EAX, EBX");
+                return EvalResult(left_bool || right_bool); 
+            }
         }
         else { throw invalid_argument("Invalid binary operation"); }
         return EvalResult(0);
@@ -122,8 +159,14 @@ public:
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult child_value = child->Evaluate(symbol_table, func_table, assembly);
         if (op == "+") { return get<int>(child_value); }
-        else if (op == "-") { return -get<int>(child_value); }
-        else if (op == "not") { return !get<bool>(child_value); }
+        else if (op == "-") { 
+            assembly.add_instruction("NEG EAX");
+            return -get<int>(child_value); 
+        }
+        else if (op == "not") { 
+            assembly.add_instruction("NOT EAX");
+            return !get<bool>(child_value); 
+        }
         else { throw invalid_argument("Invalid unary operation"); }
     }
 private:
@@ -135,6 +178,7 @@ class NoOpNode : public Node {
 public:
     NoOpNode() {type = "NoOpNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { 
+        assembly.add_instruction("NOP");
         return EvalResult("NULL"); 
     }
 };
@@ -143,6 +187,7 @@ class IntValNode : public Node {
 public:
     IntValNode(int val) : value(val) {type = "IntValNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
+        assembly.add_instruction("MOV EAX, " + to_string(value));
         return EvalResult(value);
     }
 private:
@@ -162,7 +207,9 @@ private:
 class VarNode : public Node {
 public:
     VarNode(string identifier) : identifier(identifier) {type = "VarNode";}
-    EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { 
+    EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
+        int offset = symbol_table.getOffset(identifier);
+        assembly.add_instruction("MOV EAX, [EBP-" + to_string(offset) + "]");
         return symbol_table.getVariable(identifier); 
     }
 private:
@@ -173,6 +220,11 @@ class ReadNode : public Node {
 public:
     ReadNode() {type = "ReadNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
+        assembly.add_instruction("PUSH scanint");
+        assembly.add_instruction("PUSH formatin");
+        assembly.add_instruction("CALL scanf");
+        assembly.add_instruction("ADD ESP, 8");
+        assembly.add_instruction("MOV EAX, DWORD [scanint]");
         int value;
         cin >> value;
         return EvalResult(value);
@@ -184,6 +236,10 @@ public:
     PrintNode(NodePtr expression) : expression(move(expression)) {type = "PrintNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult result = expression->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("PUSH EAX");
+        assembly.add_instruction("PUSH formatout");
+        assembly.add_instruction("CALL printf");
+        assembly.add_instruction("ADD ESP, 8");
         if (holds_alternative<int>(result)) { cout << get<int>(result) << endl; }
         else if (holds_alternative<string>(result)) { cout << get<string>(result) << endl; }
         else if (holds_alternative<double>(result)) { cout << get<double>(result) << endl; }
@@ -199,6 +255,7 @@ public:
     VarDeclareNode(string identifier, NodePtr expression = make_shared<IntValNode>(0))
         : identifier(identifier), expression(move(expression)) {type = "VarDeclareNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
+        assembly.add_instruction("PUSH DWORD 0");
         EvalResult result = expression->Evaluate(symbol_table, func_table, assembly);
         if (result == EvalResult("NULL")) { throw invalid_argument("Cannot assign NULL value to variable " + identifier); }
         symbol_table.setVariable(identifier, result, true);
@@ -215,7 +272,8 @@ public:
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         EvalResult result = expression->Evaluate(symbol_table, func_table, assembly);
         if (result == EvalResult("NULL")) { throw invalid_argument("Cannot assign NULL value to variable " + identifier); }
-        symbol_table.setVariable(identifier, result, false);
+        int offset = symbol_table.getOffset(identifier);
+        assembly.add_instruction("MOV [EBP-" + to_string(offset) + "], EAX");
         return result;
     }
 private:
@@ -225,9 +283,24 @@ private:
 
 class WhileNode : public Node {
 public:
-    WhileNode(NodePtr condition, NodePtr block) : condition(move(condition)), block(move(block)) {type = "WhileNode";}
+    WhileNode(NodePtr condition, NodePtr block) 
+        : condition(move(condition)), block(move(block)) { type = "WhileNode"; }
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
-        while (get<bool>(condition->Evaluate(symbol_table, func_table, assembly))) { block->Evaluate(symbol_table, func_table, assembly); }
+        int label_id = this->id;
+        string start_label = "WHILE_START_" + to_string(label_id);
+        string end_label = "WHILE_END_" + to_string(label_id);
+        assembly.add_label(start_label);
+        EvalResult cond_result = condition->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("CMP EAX, 0");
+        assembly.add_instruction("JE " + end_label);
+        while (get<bool>(condition->Evaluate(symbol_table, func_table, assembly))) {
+            block->Evaluate(symbol_table, func_table, assembly);
+            condition->Evaluate(symbol_table, func_table, assembly);
+            assembly.add_instruction("CMP EAX, 0");
+            assembly.add_instruction("JE " + end_label);
+        }
+        assembly.add_instruction("JMP " + start_label);
+        assembly.add_label(end_label);
         return EvalResult("NULL");
     }
 private:
@@ -236,12 +309,28 @@ private:
 
 class IfNode : public Node {
 public:
-    IfNode(NodePtr condition, NodePtr block, NodePtr else_block) : condition(move(condition)), block(move(block)), else_block(move(else_block)) {type = "IfNode";}
+    IfNode(NodePtr condition, NodePtr block, NodePtr else_block) 
+        : condition(move(condition)), block(move(block)), else_block(move(else_block)) { type = "IfNode"; }
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
-        EvalResult result = condition->Evaluate(symbol_table, func_table, assembly);
-        if (get<bool>(result)) { return block->Evaluate(symbol_table, func_table, assembly); }
-        else { return else_block->Evaluate(symbol_table, func_table, assembly); }
+        int label_id = this->id;
+        string true_label = "IF_TRUE_" + to_string(label_id);
+        string false_label = "IF_FALSE_" + to_string(label_id);
+        string end_label = "IF_END_" + to_string(label_id);
+        EvalResult cond_result = condition->Evaluate(symbol_table, func_table, assembly);
+        assembly.add_instruction("CMP EAX, 0");
+        assembly.add_instruction("JE " + false_label);
+        if (get<bool>(cond_result)) {
+            assembly.add_label(true_label);
+            block->Evaluate(symbol_table, func_table, assembly);
+            assembly.add_instruction("JMP " + end_label);
+        } else {
+            assembly.add_label(false_label);
+            if (else_block) { else_block->Evaluate(symbol_table, func_table, assembly); }
+        }
+        assembly.add_label(end_label);
+        return EvalResult("NULL");
     }
+
 private:
     NodePtr condition, block, else_block;
 };
