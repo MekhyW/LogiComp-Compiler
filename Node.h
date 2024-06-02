@@ -274,6 +274,7 @@ public:
         if (result == EvalResult("NULL")) { throw invalid_argument("Cannot assign NULL value to variable " + identifier); }
         int offset = symbol_table.getOffset(identifier);
         assembly.add_instruction("MOV [EBP-" + to_string(offset) + "], EAX");
+        symbol_table.setVariable(identifier, result, false);
         return result;
     }
 private:
