@@ -33,6 +33,9 @@ int main(int argc, char *argv[]) {
     // Preprocess
     string filtered_code = PrePro::preprocess(code);
 
+    // Tokenize
+    parser.tokenizer = Tokenizer(code);
+
     // Parse
     shared_ptr<Node> root = parser.run(filtered_code);
 
