@@ -21,26 +21,24 @@ private:
     int offset = 4;
 public:
     void setVariable(const string& name, EvalResult value, bool declare = false) {
-        if (declare && variables.find(name) != variables.end()) { throw invalid_argument("Variable already declared: " + name); }
-        else if (!declare && variables.find(name) == variables.end()) { throw invalid_argument("Undefined variable: " + name); }
+        if (!declare && variables.find(name) == variables.end()) { throw invalid_argument("Undefined variable: " + name); }
         if (declare) { 
             offsets[name] = offset;
             offset += 4;
         }
         variables[name] = value;
     }
-
     EvalResult getVariable(const string& name) {
         auto it = variables.find(name);
         if (it != variables.end()) { return it->second; }
         else { throw invalid_argument("Undefined variable: " + name); }
     }
-
     int getOffset(const string& name) {
         auto it = offsets.find(name);
         if (it != offsets.end()) { return it->second; }
         else { throw invalid_argument("Undefined variable: " + name); }
     }
+    SymbolTable copy() { return *this; }
 };
 
 class FuncTable {
@@ -56,4 +54,5 @@ public:
         if (it != functions.end()) { return it->second; } 
         else { throw invalid_argument("Undefined function: " + name); }
     }
+    FuncTable copy() { return *this; }
 };
