@@ -179,7 +179,7 @@ public:
     NoOpNode() {type = "NoOpNode";}
     EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override { 
         assembly.add_instruction("NOP");
-        return EvalResult("NULL"); 
+        return EvalResult(0); 
     }
 };
 
@@ -225,9 +225,7 @@ public:
         assembly.add_instruction("CALL scanf");
         assembly.add_instruction("ADD ESP, 8");
         assembly.add_instruction("MOV EAX, DWORD [scanint]");
-        int value;
-        cin >> value;
-        return EvalResult(value);
+        return EvalResult(0);
     }
 };
 
@@ -240,10 +238,6 @@ public:
         assembly.add_instruction("PUSH formatout");
         assembly.add_instruction("CALL printf");
         assembly.add_instruction("ADD ESP, 8");
-        if (holds_alternative<int>(result)) { cout << get<int>(result) << endl; }
-        else if (holds_alternative<string>(result)) { cout << get<string>(result) << endl; }
-        else if (holds_alternative<double>(result)) { cout << get<double>(result) << endl; }
-        else if (holds_alternative<bool>(result)) { cout << get<bool>(result) << endl; }
         return result;
     }
 private:
@@ -297,7 +291,7 @@ public:
         block->Evaluate(symbol_table, func_table, assembly);
         assembly.add_instruction("JMP " + start_label);
         assembly.add_label(end_label);
-        return EvalResult("NULL");
+        return EvalResult(0);
     }
 private:
     NodePtr condition, block;
@@ -321,7 +315,7 @@ public:
         assembly.add_label(false_label);
         else_block->Evaluate(symbol_table, func_table, assembly);
         assembly.add_label(end_label);
-        return EvalResult("NULL");
+        return EvalResult(0);
     }
 
 private:
@@ -344,7 +338,7 @@ public:
         block_node->Evaluate(new_symbol_table, func_table, sub_assembly);
         assembly.add_function_instruction(sub_assembly.get_asmcode());
         assembly.add_function_epilogue();
-        return EvalResult("NULL");
+        return EvalResult(0);
     }
 private:
     string func_name;
@@ -366,10 +360,17 @@ public:
         }
         assembly.add_instruction("CALL " + identifier);
         assembly.add_instruction("ADD ESP, " + to_string(args.size() * 4));
-        Assembly sub_assembly;
-        EvalResult result = func_info.block->Evaluate(new_symbol_table, func_table, sub_assembly);
-        assembly.add_instruction(sub_assembly.get_asmcode());
-        return result;
+        if (symbol_table.is_parent) {
+            Assembly sub_assembly;
+            EvalResult result = func_info.block->Evaluate(new_symbol_table, func_table, sub_assembly);
+            assembly.add_instruction(sub_assembly.get_asmcode());
+            return result;
+        }
+        else {
+            assembly.add_instruction("MOV EAX, [EBP-4]");
+            assembly.add_instruction("ADD EBP, 4");
+            return EvalResult(0);
+        }
     }
 private:
     string identifier;
@@ -401,6 +402,6 @@ public:
             if (statement->type == "ReturnNode") { return statement->Evaluate(symbol_table, func_table, assembly); }
             else { statement->Evaluate(symbol_table, func_table, assembly); }
         }
-        return EvalResult("NULL");
+        return EvalResult(0);
     }
 };

@@ -15,7 +15,7 @@ public:
     }
 
     void add_label(string label) {
-        function_definitions += label + ":\n";
+        function_definitions += "\n" + label + ":\n";
     }
 
     void set_header(string filename) {
@@ -93,7 +93,6 @@ public:
         ofstream file(filename);
         file << header;
         file << asmcode;
-        file << "\n";
         file << function_definitions;
         file << footer;
         file.close();

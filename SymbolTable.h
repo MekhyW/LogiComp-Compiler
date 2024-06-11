@@ -20,6 +20,7 @@ private:
     unordered_map<string, int> offsets;
     int offset = 4;
 public:
+    bool is_parent = true;
     void setVariable(const string& name, EvalResult value, bool declare = false) {
         if (!declare && variables.find(name) == variables.end()) { throw invalid_argument("Undefined variable: " + name); }
         if (declare) { 
@@ -43,6 +44,7 @@ public:
         copy.variables = variables;
         copy.offsets = offsets;
         copy.offset = offset;
+        copy.is_parent = false;
         return copy;
     }
 };

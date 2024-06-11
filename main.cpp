@@ -45,6 +45,7 @@ int main(int argc, char *argv[]) {
     assembly.set_footer("Assembly/footer.asm");
     assembly.check_windows();
     assembly.write_to_file(filename.substr(0, filename.size() - 4) + ".asm");
+    cout << "Assembly code generated in " << filename.substr(0, filename.size() - 4) + ".asm" << endl;
 
     return 0;
 }
