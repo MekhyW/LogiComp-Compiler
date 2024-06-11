@@ -40,9 +40,9 @@ int main(int argc, char *argv[]) {
     shared_ptr<Node> root = parser.run(filtered_code);
 
     // Compile
-    assembly.add_file("Assembly/header.asm");
+    assembly.set_header("Assembly/header.asm");
     root->Evaluate(table, func_table, assembly);
-    assembly.add_file("Assembly/footer.asm");
+    assembly.set_footer("Assembly/footer.asm");
     assembly.check_windows();
     assembly.write_to_file(filename.substr(0, filename.size() - 4) + ".asm");
 

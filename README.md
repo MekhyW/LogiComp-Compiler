@@ -63,6 +63,3 @@ nasm -f win32 -o program.o program.asm # For Windows
 gcc -m32 -o program program.o
 ./program
 ```
-
-## Test status
-![git status](http://3.129.230.99/svg/MekhyW/LogiComp-Compiler/)

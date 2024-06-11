@@ -334,6 +334,16 @@ public:
         : func_name(func_name), args(args), block_node(move(block_node)) {type = "FuncDeclareNode";}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
         func_table.setFunction(func_name, args, block_node);
+        SymbolTable new_symbol_table = SymbolTable();
+        for (const auto& arg : args) {
+            new_symbol_table.setVariable(arg, 0, true);
+        }
+        assembly.add_label(func_name);
+        assembly.add_function_prologue(args.size());
+        Assembly sub_assembly;
+        block_node->Evaluate(new_symbol_table, func_table, sub_assembly);
+        assembly.add_instruction(sub_assembly.get_asmcode());
+        assembly.add_function_epilogue();
         return EvalResult("NULL");
     }
 private:
@@ -349,7 +359,12 @@ public:
         FuncInfo func_info = func_table.getFunction(identifier);
         if (func_info.args.size() != args.size()) { throw invalid_argument("Function " + identifier + " expects " + to_string(func_info.args.size()) + " arguments, but " + to_string(args.size()) + " were given"); }
         SymbolTable new_symbol_table = SymbolTable();
-        for (int i = 0; i < func_info.args.size(); i++) { new_symbol_table.setVariable(func_info.args[i], args[i]->Evaluate(symbol_table, func_table, assembly), true); }
+        for (int i = 0; i < func_info.args.size(); i++) { 
+            new_symbol_table.setVariable(func_info.args[i], args[i]->Evaluate(symbol_table, func_table, assembly), true); 
+            assembly.add_instruction("PUSH EAX");
+        }
+        assembly.add_instruction("CALL " + identifier);
+        assembly.add_instruction("ADD ESP, " + to_string(args.size() * 4));
         return func_info.block->Evaluate(new_symbol_table, func_table, assembly);
     }
 private:
@@ -361,7 +376,14 @@ class ReturnNode : public Node {
 public:
     ReturnNode(NodePtr return_node) : return_node(move(return_node)) {type = "ReturnNode";}
     virtual EvalResult Evaluate(SymbolTable& symbol_table, FuncTable& func_table, Assembly& assembly) const override {
-        return return_node->Evaluate(symbol_table, func_table, assembly);
+        EvalResult return_value = return_node->Evaluate(symbol_table, func_table, assembly);
+        if (holds_alternative<int>(return_value)) {
+            assembly.add_function_instruction("MOV EAX, " + to_string(get<int>(return_value)));
+        } else if (holds_alternative<string>(return_value)) {
+            assembly.add_function_instruction("MOV EAX, " + get<string>(return_value));
+        }
+        assembly.add_function_epilogue();
+        return return_value;
     }
 private:
     NodePtr return_node;

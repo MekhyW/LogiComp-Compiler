@@ -5,6 +5,9 @@ using namespace std;
 class Assembly {
 private:
     string asmcode = "";
+    string header = "";
+    string footer = "";
+    string function_definitions = "";
 
 public:
     void add_instruction(string instruction) {
@@ -12,14 +15,55 @@ public:
     }
 
     void add_label(string label) {
-        asmcode += label + ":\n";
+        function_definitions += label + ":\n";
     }
 
-    void add_file(string filename) {
+    void set_header(string filename) {
         ifstream file(filename);
         string line;
-        while (getline(file, line)) { asmcode += line + "\n"; }
+        while (getline(file, line)) { header += line + "\n"; }
         file.close();
+    }
+
+    void set_footer(string filename) {
+        ifstream file(filename);
+        string line;
+        while (getline(file, line)) { footer += line + "\n"; }
+        file.close();
+    }
+
+    void add_function_prologue(int n_args) {
+        function_definitions += "PUSH EBP\n";
+        function_definitions += "MOV EBP, ESP\n";
+        for (int i = 0; i < n_args; ++i) {
+            switch (i) {
+                case 0:
+                    function_definitions += "MOV EAX, [EBP+8]\n";
+                    break;
+                case 1:
+                    function_definitions += "MOV EBX, [EBP+12]\n";
+                    break;
+                case 2:
+                    function_definitions += "MOV ECX, [EBP+16]\n";
+                    break;
+                case 3:
+                    function_definitions += "MOV EDX, [EBP+20]\n";
+                    break;
+                default:
+                    function_definitions += "MOV ESI, [EBP+" + to_string(4 * (i + 2)) + "]\n";
+                    break;
+            }
+        }
+    }
+
+    void add_function_epilogue() {
+        function_definitions += "MOV ESP, EBP\n";
+        function_definitions += "POP EBP\n";
+        function_definitions += "RET\n";
+    }
+
+    void add_function_instruction(string instruction) {
+        function_definitions += instruction + "\n";
     }
 
     void check_windows() {
@@ -47,7 +91,11 @@ public:
 
     void write_to_file(string filename) {
         ofstream file(filename);
+        file << header;
         file << asmcode;
+        file << "\n";
+        file << function_definitions;
+        file << footer;
         file.close();
     }
 
