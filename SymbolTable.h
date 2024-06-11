@@ -38,7 +38,13 @@ public:
         if (it != offsets.end()) { return it->second; }
         else { throw invalid_argument("Undefined variable: " + name); }
     }
-    SymbolTable copy() { return *this; }
+    SymbolTable copy() { 
+        SymbolTable copy;
+        copy.variables = variables;
+        copy.offsets = offsets;
+        copy.offset = offset;
+        return copy;
+    }
 };
 
 class FuncTable {
@@ -54,5 +60,9 @@ public:
         if (it != functions.end()) { return it->second; } 
         else { throw invalid_argument("Undefined function: " + name); }
     }
-    FuncTable copy() { return *this; }
+    FuncTable copy() { 
+        FuncTable copy;
+        copy.functions = functions;
+        return copy;
+    }
 };
